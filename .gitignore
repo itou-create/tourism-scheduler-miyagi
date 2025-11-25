@@ -37,6 +37,9 @@ Thumbs.db
 *.swo
 *~
 
+# Claude settings
+.claude/settings.local.json
+
 # Temporary files
 tmp/
 temp/
