@@ -43,13 +43,16 @@ router.post('/generate', async (req, res) => {
       location.lat,
       location.lon,
       theme,
-      5000 // 5km radius
+      10000 // 10km radius
     );
 
-    // レーティングでソートして上位を選択
-    const selectedSpots = allSpots
-      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      .slice(0, maxSpots || 5);
+    // 出発地からの距離とレーティングを考慮して選択
+    const selectedSpots = placesService.selectSpotsNearOrigin(
+      allSpots,
+      location.lat,
+      location.lon,
+      maxSpots || 5
+    );
 
     if (selectedSpots.length === 0) {
       return res.status(404).json({
