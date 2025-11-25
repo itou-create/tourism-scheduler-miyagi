@@ -1,0 +1,27 @@
+{
+  "name": "tourism-scheduler-server",
+  "version": "1.0.0",
+  "description": "GTFS-based tourism route scheduler backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "download-gtfs": "node scripts/downloadGtfs.js",
+    "import-gtfs": "node scripts/importGtfs.js"
+  },
+  "keywords": ["gtfs", "tourism", "schedule", "optimization"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "gtfs": "^4.10.1",
+    "node-fetch": "^3.3.2",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

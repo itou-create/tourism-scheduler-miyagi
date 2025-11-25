@@ -1,0 +1,1 @@
+{"success":true,"data":{"schedule":[{"type":"visit","spot":{"id":"sendai_8","name":"牛たん通り","lat":38.2608,"lon":140.8825,"rating":4.7,"types":["restaurant","food"],"vicinity":"青葉区中央1丁目（仙台駅3F）","theme":"グルメ"},"arrivalTime":"09:00","departureTime":"10:00","duration":60}],"summary":{"totalSpots":1,"totalDuration":60,"startTime":"09:00","endTime":"10:00"}}}
