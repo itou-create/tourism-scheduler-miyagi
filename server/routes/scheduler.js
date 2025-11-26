@@ -46,6 +46,11 @@ router.post('/generate', async (req, res) => {
       10000 // 10km radius
     );
 
+    console.log(`🔍 Search results - Theme: ${theme}, Total spots found: ${allSpots.length}`);
+    if (allSpots.length > 0) {
+      console.log(`  First 3 spots: ${allSpots.slice(0, 3).map(s => s.name).join(', ')}`);
+    }
+
     // 出発地からの距離とレーティングを考慮して選択
     const selectedSpots = placesService.selectSpotsNearOrigin(
       allSpots,
@@ -53,6 +58,8 @@ router.post('/generate', async (req, res) => {
       location.lon,
       maxSpots || 5
     );
+
+    console.log(`✅ Selected spots: ${selectedSpots.length}`);
 
     if (selectedSpots.length === 0) {
       return res.status(404).json({

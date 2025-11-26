@@ -93,12 +93,24 @@ function ScheduleItem({ item, index }) {
 
   if (item.type === 'transit') {
     const isReturn = item.isReturn || false;
-    const transitTitle = isReturn
-      ? '出発地点へ帰る'
-      : (item.mode === 'walking' ? '徒歩で移動' : '公共交通機関で移動');
+    const isFirst = item.isFirstTransit || false;
+    const isTransferLeg = item.isTransferLeg || 0;
+
+    let transitTitle = '';
+    if (isReturn) {
+      transitTitle = '出発地点へ帰る';
+    } else if (isFirst) {
+      transitTitle = '出発地から最初の目的地へ';
+    } else if (isTransferLeg === 1) {
+      transitTitle = '乗り換えルート（第1区間）';
+    } else if (isTransferLeg === 2) {
+      transitTitle = '乗り換えルート（第2区間）';
+    } else {
+      transitTitle = item.mode === 'walking' ? '徒歩で移動' : '公共交通機関で移動';
+    }
 
     return (
-      <div className={`border rounded-lg p-2 md:p-3 ml-3 md:ml-4 ${isReturn ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+      <div className={`border rounded-lg p-2 md:p-3 ml-3 md:ml-4 ${isReturn ? 'bg-green-50 border-green-200' : isTransferLeg ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
         <div className="flex items-center text-xs md:text-sm">
           <div className="flex-shrink-0">
             {item.mode === 'walking' ? (
@@ -117,6 +129,13 @@ function ScheduleItem({ item, index }) {
               </span>
             </div>
 
+            {/* 乗り換えバッジ */}
+            {isTransferLeg > 0 && (
+              <div className="mt-1 inline-block bg-purple-600 text-white text-xs px-2 py-1 rounded">
+                🔄 乗り換えあり
+              </div>
+            )}
+
             {/* ルート名・路線番号を表示 */}
             {item.mode === 'transit' && (item.routeName || item.routeNumber) && (
               <div className="mt-1 text-sm font-semibold text-blue-700">
@@ -125,40 +144,94 @@ function ScheduleItem({ item, index }) {
               </div>
             )}
 
-            {/* バス停名を表示 */}
+            {/* 詳細な経路情報を表示 */}
             {item.mode === 'transit' && item.route && (
-              <div className="mt-2 text-xs text-gray-700 space-y-1 bg-gray-50 p-2 rounded">
+              <div className="mt-2 text-xs text-gray-800 space-y-2 bg-white border border-gray-200 p-3 rounded">
+                <div className="font-semibold text-gray-700 mb-2 border-b pb-1">
+                  📍 移動経路の詳細
+                </div>
+
+                {/* 出発地からバス停までの徒歩 */}
+                <div className="flex items-start space-x-2 pl-2">
+                  <span className="text-gray-500">1️⃣</span>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-700">
+                      🚶 {item.from.name || '現在地'}から徒歩でバス停へ
+                    </div>
+                    {item.route.fromStop && (
+                      <div className="text-gray-600 ml-4 mt-1">
+                        → <span className="font-medium text-orange-600">{item.route.fromStop.stop_name}</span>（バス停）
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* バス乗車 */}
                 {item.route.fromStop && (
-                  <div className="flex items-start">
-                    <span className="text-orange-500 font-bold mr-1">🚌</span>
-                    <span>
-                      <span className="font-medium">乗車:</span> {item.route.fromStop.stop_name}
-                    </span>
+                  <div className="flex items-start space-x-2 pl-2 bg-blue-50 p-2 rounded">
+                    <span className="text-blue-600">2️⃣</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-blue-700">
+                        🚌 バス乗車
+                      </div>
+                      <div className="text-gray-700 ml-4 mt-1 space-y-1">
+                        <div>
+                          <span className="text-orange-500 font-bold">●</span> 乗車: <span className="font-medium">{item.route.fromStop.stop_name}</span>
+                        </div>
+                        {item.routeNumber && (
+                          <div className="text-blue-600">
+                            ├ 路線: <span className="font-semibold">{item.routeNumber}番</span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-green-500 font-bold">●</span> 降車: <span className="font-medium">{item.route.toStop.stop_name}</span>
+                        </div>
+                        <div className="text-gray-500 text-xs mt-1">
+                          🕐 乗車時間: {item.travelTime}分
+                          {item.waitTime > 0 && ` (待ち時間: ${item.waitTime}分)`}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* バス停から目的地までの徒歩 */}
                 {item.route.toStop && (
-                  <div className="flex items-start">
-                    <span className="text-green-500 font-bold mr-1">🚌</span>
-                    <span>
-                      <span className="font-medium">降車:</span> {item.route.toStop.stop_name}
-                    </span>
+                  <div className="flex items-start space-x-2 pl-2">
+                    <span className="text-gray-500">3️⃣</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-700">
+                        🚶 バス停から目的地へ徒歩
+                      </div>
+                      <div className="text-gray-600 ml-4 mt-1">
+                        <span className="font-medium text-green-600">{item.route.toStop.stop_name}</span>（バス停）から
+                        → <span className="font-medium">{item.to.name || '目的地'}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="mt-1 text-xs text-gray-600 space-x-3">
-              <span>出発: {item.departureTime}</span>
-              <span>到着: {item.arrivalTime}</span>
-              {item.waitTime > 0 && (
-                <span className="text-orange-600">待ち時間: {item.waitTime}分</span>
-              )}
-            </div>
-            {item.mode === 'walking' && item.distance && (
-              <p className="mt-1 text-xs text-gray-500">
-                距離: {item.distance.toFixed(2)}km
-              </p>
+            {/* 徒歩の場合の情報 */}
+            {item.mode === 'walking' && (
+              <div className="mt-2 text-xs text-gray-700 bg-white border border-gray-200 p-3 rounded">
+                <div className="font-medium">
+                  🚶 {item.from.name || '出発地'} → {item.to.name || '目的地'}
+                </div>
+                {item.route && item.route.distance && (
+                  <div className="text-gray-600 mt-1">
+                    距離: {item.route.distance.toFixed(2)}km
+                  </div>
+                )}
+              </div>
             )}
+
+            <div className="mt-2 text-xs text-gray-600 space-x-3">
+              <span>🕐 出発: {item.departureTime}</span>
+              <span>🏁 到着: {item.arrivalTime}</span>
+            </div>
+
             {item.scenicScore > 0 && (
               <p className="mt-1 text-xs text-green-600">
                 🌄 景観ルート (スコア: {item.scenicScore.toFixed(1)})
