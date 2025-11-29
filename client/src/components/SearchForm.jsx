@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import LocationMapModal from './LocationMapModal';
+import { LOCATION_PRESETS, getPresetLocation } from '../data/locationPresets';
 
 const THEMES = [
   { value: '歴史', label: '歴史・文化財' },
@@ -17,6 +19,9 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
     maxSpots: 5,
     scenicPriority: 3
   });
+  const [selectedPreset, setSelectedPreset] = useState('sendai_station');
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,6 +41,33 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
         [field]: numValue
       });
     }
+  };
+
+  // プリセット選択時
+  const handlePresetChange = (e) => {
+    const presetId = e.target.value;
+    setSelectedPreset(presetId);
+
+    if (presetId === 'custom') {
+      setShowManualInput(true);
+      return;
+    }
+
+    setShowManualInput(false);
+    const preset = getPresetLocation(presetId);
+    if (preset && preset.lat !== null) {
+      onLocationChange({
+        lat: preset.lat,
+        lon: preset.lon
+      });
+    }
+  };
+
+  // 地図モーダルで位置選択
+  const handleMapLocationSelect = (location) => {
+    onLocationChange(location);
+    setSelectedPreset('custom');
+    setShowManualInput(true);
   };
 
   const handleSubmit = (e) => {
@@ -63,32 +95,63 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             出発地点
           </label>
-          <div className="space-y-2">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">緯度</label>
-              <input
-                type="number"
-                step="0.0001"
-                value={selectedLocation.lat}
-                onChange={(e) => handleLocationChange('lat', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="例: 38.2606"
-              />
+
+          {/* プリセット選択 */}
+          <select
+            value={selectedPreset}
+            onChange={handlePresetChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
+          >
+            {LOCATION_PRESETS.map(preset => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name} {preset.description && `- ${preset.description}`}
+              </option>
+            ))}
+          </select>
+
+          {/* 地図で選択ボタン */}
+          <button
+            type="button"
+            onClick={() => setShowMapModal(true)}
+            className="w-full mb-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 border border-primary-300 rounded-md hover:bg-primary-100 transition-colors flex items-center justify-center"
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            地図で選択
+          </button>
+
+          {/* 手動入力（「手動入力」選択時のみ表示） */}
+          {showManualInput && (
+            <div className="space-y-2 mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">緯度</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={selectedLocation.lat}
+                  onChange={(e) => handleLocationChange('lat', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="例: 38.2606"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">経度</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={selectedLocation.lon}
+                  onChange={(e) => handleLocationChange('lon', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="例: 140.8817"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">経度</label>
-              <input
-                type="number"
-                step="0.0001"
-                value={selectedLocation.lon}
-                onChange={(e) => handleLocationChange('lon', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="例: 140.8817"
-              />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            💡 地図をクリックしても変更できます
+          )}
+
+          {/* 選択中の位置表示 */}
+          <p className="text-xs text-gray-600 mt-2">
+            📍 緯度 {selectedLocation.lat.toFixed(4)}, 経度 {selectedLocation.lon.toFixed(4)}
           </p>
         </div>
 
@@ -190,6 +253,14 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
           {loading ? '生成中...' : 'スケジュールを生成'}
         </button>
       </div>
+
+      {/* 地図選択モーダル */}
+      <LocationMapModal
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        onLocationSelect={handleMapLocationSelect}
+        initialLocation={selectedLocation}
+      />
     </form>
   );
 }

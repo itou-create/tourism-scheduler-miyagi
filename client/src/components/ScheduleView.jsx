@@ -1,4 +1,5 @@
 import Timeline from './Timeline';
+import { getElevation, getSlopeStars, getSlopeDescription } from '../services/plateauService';
 
 function ScheduleView({ schedule }) {
   if (!schedule || !schedule.schedule) {
@@ -61,6 +62,9 @@ function ScheduleView({ schedule }) {
 
 function ScheduleItem({ item, index }) {
   if (item.type === 'visit') {
+    // PLATEAU標高データを取得
+    const elevationData = getElevation(item.spot.name);
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-3 md:p-4 shadow-sm">
         <div className="flex items-start">
@@ -84,6 +88,14 @@ function ScheduleItem({ item, index }) {
                   ⭐ {item.spot.rating}
                 </span>
               )}
+            </div>
+
+            {/* PLATEAU標高情報 */}
+            <div className="mt-2 bg-indigo-50 border border-indigo-200 rounded px-2 py-1 inline-block">
+              <span className="text-xs text-indigo-700">
+                📍 標高: {elevationData.elevation}m | 坂のきつさ: {getSlopeStars(elevationData.slope)} {getSlopeDescription(elevationData.slope)}
+              </span>
+              <p className="text-xs text-gray-500 mt-0.5">データ出典: PLATEAU 3D都市モデル</p>
             </div>
           </div>
         </div>

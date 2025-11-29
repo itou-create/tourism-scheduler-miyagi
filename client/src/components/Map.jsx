@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { RAIL_LINES } from '../data/railData';
 
 // Leafletのデフォルトアイコンの修正
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -81,6 +82,40 @@ function LocationSelector({ onLocationSelect }) {
     },
   });
   return null;
+}
+
+// 鉄道路線表示コンポーネント
+function RailLayer({ visible }) {
+  if (!visible) return null;
+
+  return (
+    <>
+      {RAIL_LINES.map((line, lineIndex) => {
+        const positions = line.stations.map(station => [station.lat, station.lon]);
+        return (
+          <Polyline
+            key={`rail-line-${lineIndex}`}
+            positions={positions}
+            pathOptions={{
+              color: line.color,
+              weight: 3,
+              opacity: 0.8,
+              dashArray: '10, 5'
+            }}
+          >
+            <Popup>
+              <div className="text-sm">
+                <strong>{line.name}</strong>
+                <p className="text-xs text-gray-600 mt-1">
+                  駅数: {line.stations.length}
+                </p>
+              </div>
+            </Popup>
+          </Polyline>
+        );
+      })}
+    </>
+  );
 }
 
 // 道路に沿ったルート描画コンポーネント
@@ -197,27 +232,46 @@ function RoadRoute({ schedule }) {
 
 function Map({ center, schedule, onLocationSelect }) {
   const [mapCenter, setMapCenter] = useState(center);
+  const [showRailLayer, setShowRailLayer] = useState(false); // デフォルトOFF
 
   useEffect(() => {
     setMapCenter(center);
   }, [center]);
 
   return (
-    <MapContainer
-      center={mapCenter}
-      zoom={13}
-      className="h-full w-full"
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <>
+      {/* 鉄道路線表示切り替えボタン */}
+      <div className="absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-lg p-2">
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showRailLayer}
+            onChange={(e) => setShowRailLayer(e.target.checked)}
+            className="mr-2"
+          />
+          <span className="text-sm font-medium text-gray-700">鉄道路線を表示</span>
+        </label>
+        <p className="text-xs text-gray-500 mt-1">Project LINKS</p>
+      </div>
 
-      <LocationSelector onLocationSelect={onLocationSelect} />
+      <MapContainer
+        center={mapCenter}
+        zoom={13}
+        className="h-full w-full"
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      {/* 道路に沿ったルート描画 */}
-      <RoadRoute schedule={schedule} />
+        <LocationSelector onLocationSelect={onLocationSelect} />
+
+        {/* 鉄道路線表示 */}
+        <RailLayer visible={showRailLayer} />
+
+        {/* 道路に沿ったルート描画 */}
+        <RoadRoute schedule={schedule} />
 
       {/* スケジュールのマーカー表示 */}
       {schedule && schedule.schedule && schedule.schedule.map((item, index) => {
@@ -304,6 +358,7 @@ function Map({ center, schedule, onLocationSelect }) {
         return null;
       })}
     </MapContainer>
+    </>
   );
 }
 
