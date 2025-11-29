@@ -1,33 +1,8 @@
 {
   "name": "tourism-scheduler-miyagi",
   "version": "1.0.0",
-  "description": "宮城県観光周遊スケジュール自動生成アプリ",
-  "type": "module",
   "scripts": {
-    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
-    "build": "cd client && npm run build",
-    "start": "cd server && node server.js",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "import-gtfs": "cd server && npm run import-gtfs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/itou-create/tourism-scheduler-miyagi.git"
-  },
-  "keywords": [
-    "tourism",
-    "gtfs",
-    "scheduler",
-    "miyagi",
-    "open-data"
-  ],
-  "author": "",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "node-fetch": "^3.3.2"
+    "build": "cd client && npm ci && npm run build && cd ../server && npm ci",
+    "start": "cd server && npm start"
   }
 }
