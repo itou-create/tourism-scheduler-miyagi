@@ -82,14 +82,7 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full min-h-0">
-      {/* Header */}
-      <div className="p-3 pb-2 md:p-4 md:pb-2 flex-shrink-0">
-        <h2 className="text-base md:text-lg font-semibold text-gray-800">検索条件</h2>
-      </div>
-
-      {/* Scrollable Form Fields */}
-      <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-3 md:px-4 md:space-y-4 min-h-0">
+    <form onSubmit={handleSubmit} className="space-y-4">
         {/* Location Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -241,10 +234,9 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
             <span>景観重視</span>
           </div>
         </div>
-      </div>
 
-      {/* Fixed Submit Button */}
-      <div className="p-3 pt-3 md:p-4 md:pt-3 border-t border-gray-100 flex-shrink-0 bg-white" style={{ minHeight: '72px' }}>
+      {/* Submit Button */}
+      <div className="pt-2">
         <button
           type="submit"
           disabled={loading}
