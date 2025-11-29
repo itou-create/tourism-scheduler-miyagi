@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents } from 'react-leaflet';
+import { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
 // Leafletのデフォルトアイコンの修正
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -82,27 +83,124 @@ function LocationSelector({ onLocationSelect }) {
   return null;
 }
 
+// 道路に沿ったルート描画コンポーネント
+function RoadRoute({ schedule }) {
+  const map = useMap();
+  const routeLayers = useRef([]);
+
+  useEffect(() => {
+    // 既存のルートをクリア
+    routeLayers.current.forEach(layer => {
+      map.removeLayer(layer);
+    });
+    routeLayers.current = [];
+
+    if (!schedule || !schedule.schedule) return;
+
+    // スケジュールから移動区間を抽出
+    const transitSegments = [];
+    for (let i = 0; i < schedule.schedule.length; i++) {
+      const item = schedule.schedule[i];
+
+      if (item.type === 'transit' && item.from && item.to) {
+        let fromLat, fromLon, toLat, toLon, mode, routeNumber;
+
+        // 出発地の座標
+        if (item.from.lat !== undefined) {
+          fromLat = item.from.lat;
+          fromLon = item.from.lon;
+        } else if (item.from.spot) {
+          fromLat = item.from.spot.lat;
+          fromLon = item.from.spot.lon;
+        }
+
+        // 目的地の座標
+        if (item.to.lat !== undefined) {
+          toLat = item.to.lat;
+          toLon = item.to.lon;
+        } else if (item.to.spot) {
+          toLat = item.to.spot.lat;
+          toLon = item.to.spot.lon;
+        }
+
+        mode = item.mode;
+        routeNumber = item.routeNumber;
+
+        if (fromLat && toLat) {
+          transitSegments.push({ fromLat, fromLon, toLat, toLon, mode, routeNumber });
+        }
+      }
+    }
+
+    // 各区間のルートを取得して描画
+    transitSegments.forEach((segment, index) => {
+      const { fromLat, fromLon, toLat, toLon, mode, routeNumber } = segment;
+
+      // OSRM APIでルート取得
+      fetch(`https://router.project-osrm.org/route/v1/foot/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.code === 'Ok' && data.routes && data.routes[0]) {
+            const coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+            // 色を決定（徒歩=緑、バス=青）
+            const color = mode === 'walking' ? '#10b981' : '#3b82f6';
+            const weight = mode === 'walking' ? 3 : 4;
+            const dashArray = mode === 'walking' ? '5, 10' : null;
+
+            // ルートを描画
+            const polyline = L.polyline(coordinates, {
+              color: color,
+              weight: weight,
+              opacity: 0.7,
+              dashArray: dashArray
+            }).addTo(map);
+
+            // ポップアップを追加
+            const popupContent = mode === 'walking'
+              ? '🚶 徒歩ルート'
+              : `🚌 バスルート${routeNumber ? ` (${routeNumber}番)` : ''}`;
+
+            polyline.bindPopup(popupContent);
+
+            routeLayers.current.push(polyline);
+          }
+        })
+        .catch(error => {
+          console.error('ルート取得エラー:', error);
+          // エラー時は直線で描画
+          const polyline = L.polyline(
+            [[fromLat, fromLon], [toLat, toLon]],
+            {
+              color: mode === 'walking' ? '#10b981' : '#3b82f6',
+              weight: 3,
+              opacity: 0.5,
+              dashArray: '10, 10'
+            }
+          ).addTo(map);
+
+          routeLayers.current.push(polyline);
+        });
+    });
+
+    // クリーンアップ
+    return () => {
+      routeLayers.current.forEach(layer => {
+        map.removeLayer(layer);
+      });
+      routeLayers.current = [];
+    };
+  }, [schedule, map]);
+
+  return null;
+}
+
 function Map({ center, schedule, onLocationSelect }) {
   const [mapCenter, setMapCenter] = useState(center);
 
   useEffect(() => {
     setMapCenter(center);
   }, [center]);
-
-  // スケジュールからルートの座標を抽出
-  const getRouteCoordinates = () => {
-    if (!schedule || !schedule.schedule) return [];
-
-    const coords = [];
-    schedule.schedule.forEach((item, index) => {
-      if (item.type === 'visit' && item.spot) {
-        coords.push([item.spot.lat, item.spot.lon]);
-      }
-    });
-    return coords;
-  };
-
-  const routeCoordinates = getRouteCoordinates();
 
   return (
     <MapContainer
@@ -117,6 +215,9 @@ function Map({ center, schedule, onLocationSelect }) {
       />
 
       <LocationSelector onLocationSelect={onLocationSelect} />
+
+      {/* 道路に沿ったルート描画 */}
+      <RoadRoute schedule={schedule} />
 
       {/* スケジュールのマーカー表示 */}
       {schedule && schedule.schedule && schedule.schedule.map((item, index) => {
@@ -202,17 +303,6 @@ function Map({ center, schedule, onLocationSelect }) {
         }
         return null;
       })}
-
-      {/* ルートラインを表示 */}
-      {routeCoordinates.length > 1 && (
-        <Polyline
-          positions={routeCoordinates}
-          color="#3b82f6"
-          weight={3}
-          opacity={0.7}
-          dashArray="10, 10"
-        />
-      )}
     </MapContainer>
   );
 }

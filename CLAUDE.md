@@ -228,11 +228,59 @@ CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
   ```
 - GTFSデータの確認: `node check_gtfs_data.js`（ルート数、停留所数、時刻表を確認）
 
+## Renderへのデプロイ
+
+### デプロイ手順
+
+1. **GitHubリポジトリにプッシュ**
+   ```bash
+   git add .
+   git commit -m "Add Render deployment configuration"
+   git push origin master
+   ```
+
+2. **Renderでプロジェクトを作成**
+   - https://render.com にアクセス
+   - "New" → "Web Service" を選択
+   - GitHubリポジトリを接続: `itou-create/tourism-scheduler-miyagi`
+
+3. **デプロイ設定（render.yamlで自動設定）**
+   - **Name**: tourism-scheduler-miyagi
+   - **Region**: Oregon (US West)
+   - **Branch**: master
+   - **Build Command**: `npm install && npm run install-all && npm run build`
+   - **Start Command**: `npm start`
+
+4. **環境変数の設定**
+   Renderのダッシュボードで以下を設定：
+   - `NODE_ENV` = `production`
+   - `PORT` = `10000` (Renderが自動設定)
+   - `CORS_ORIGIN` = 本番URLまたは `*`
+
+5. **GTFSデータのインポート**
+   デプロイ後、Render Shellで実行：
+   ```bash
+   npm run import-gtfs
+   ```
+
+### デプロイ後の確認
+
+- **ヘルスチェック**: `https://your-app.onrender.com/api/health`
+- **アプリケーション**: `https://your-app.onrender.com`
+
+### 注意事項
+
+- Freeプランでは15分間アクセスがないとスリープ状態になります
+- 初回アクセス時は起動に時間がかかる場合があります
+- GTFSデータベース（約50MB）はGitに含まれていないため、デプロイ後に手動インポートが必要
+
 ## 拡張ポイント
 
 1. ✅ **実際のGTFSデータ統合**: 仙台市営バスと七ヶ浜町ぐるりんこのデータを統合済み
-2. **Google Places API**: 実際の観光スポット情報を取得（現在はダミーデータ）
-3. **最適化アルゴリズム強化**: 遺伝的アルゴリズムやA*探索の導入
-4. **景観ルート評価**: 地形データや景観ポイントデータベースとの連携
-5. **ユーザー認証・保存機能**: お気に入りルートの保存
-6. **時刻表データの改善**: 出発時刻の取得ロジックを改善して、より多くのバス便を表示
+2. ✅ **道路に沿ったルート表示**: OSRM APIを使用した実際の道路ネットワークに基づくルート表示
+3. ✅ **バス乗り換え対応**: 主要ハブ経由の1回乗り換えルート検索
+4. **Google Places API**: 実際の観光スポット情報を取得（現在はダミーデータ）
+5. **最適化アルゴリズム強化**: 遺伝的アルゴリズムやA*探索の導入
+6. **景観ルート評価**: 地形データや景観ポイントデータベースとの連携
+7. **ユーザー認証・保存機能**: お気に入りルートの保存
+8. **時刻表データの改善**: 出発時刻の取得ロジックを改善して、より多くのバス便を表示
