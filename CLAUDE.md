@@ -43,14 +43,16 @@ npm run preview    # ビルド結果のプレビュー
 
 ### GTFSデータのダウンロードとインポート
 ```bash
-# GTFSデータを手動で配置する場合
-# 1. server/gtfs_data/ ディレクトリに以下のファイルを配置:
-#    - gtfs-jp_sendaicitybus_current_date.zip (仙台市営バス)
-#    - All_Gururinko-20250225.zip (七ヶ浜町ぐるりんこ)
-
-# 2. GTFSデータをインポート
+# 方法1: 自動ダウンロード（推奨）
 cd server
-npm run import-gtfs
+npm run download-gtfs    # GTFSデータを自動ダウンロード
+npm run import-gtfs      # データベースにインポート
+
+# 方法2: 手動で配置する場合
+# 1. server/gtfs_data/ ディレクトリに以下のファイルを配置:
+#    - sendai_bus.zip (仙台市営バス)
+#    - shichigahama_gururinko.zip (七ヶ浜町ぐるりんこ)
+# 2. npm run import-gtfs を実行
 
 # GTFSデータの確認
 node ../check_gtfs_data.js
@@ -257,11 +259,15 @@ CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
    - `PORT` = `10000` (Renderが自動設定)
    - `CORS_ORIGIN` = 本番URLまたは `*`
 
-5. **GTFSデータのインポート**
+5. **GTFSデータのダウンロードとインポート**
    デプロイ後、Render Shellで実行：
    ```bash
-   npm run import-gtfs
+   cd server
+   npm run download-gtfs    # GTFSデータをダウンロード
+   npm run import-gtfs      # データベースにインポート
    ```
+
+   **重要**: 両方のコマンドを実行してください。download-gtfsを実行しないと、七ヶ浜町のバスデータがインポートされません。
 
 ### デプロイ後の確認
 

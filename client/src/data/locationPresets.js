@@ -51,6 +51,13 @@ export const LOCATION_PRESETS = [
     description: '地下鉄東西線'
   },
   {
+    id: 'shichigahama',
+    name: '七ヶ浜町',
+    lat: 38.2983,
+    lon: 141.0606,
+    description: '七ヶ浜町役場周辺（ぐるりんこバス運行エリア）'
+  },
+  {
     id: 'custom',
     name: '手動入力',
     lat: null,

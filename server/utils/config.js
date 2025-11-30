@@ -20,11 +20,11 @@ export const gtfsConfig = {
   agencies: [
     {
       // 仙台市営バス
-      path: join(__dirname, '../gtfs_data/gtfs-jp_sendaicitybus_current_date.zip')
+      path: join(__dirname, '../gtfs_data/sendai_bus.zip')
     },
     {
       // 七ヶ浜町民バス「ぐるりんこ」
-      path: join(__dirname, '../gtfs_data/All_Gururinko-20250225.zip')
+      path: join(__dirname, '../gtfs_data/shichigahama_gururinko.zip')
     }
   ],
   sqlitePath: join(__dirname, '../gtfs_data/gtfs.db'),
