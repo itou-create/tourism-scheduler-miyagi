@@ -12,9 +12,14 @@ async function runImport() {
   try {
     await importGtfs(gtfsConfig);
     console.log('✅ GTFS import completed successfully!');
+    process.exit(0);
   } catch (error) {
     console.error('❌ Error importing GTFS:', error);
-    process.exit(1);
+    console.warn('⚠️  警告: GTFSデータのインポートに失敗しました。');
+    console.warn('   - GTFSファイルが存在するか確認してください');
+    console.warn('   - npm run download-gtfs を先に実行してください');
+    // ビルドは失敗させずに警告のみ
+    process.exit(0);
   }
 }
 

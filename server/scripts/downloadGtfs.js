@@ -134,9 +134,21 @@ async function downloadAllGtfsData() {
 // メイン実行
 (async () => {
   try {
-    await downloadAllGtfsData();
+    const results = await downloadAllGtfsData();
+    const successful = results.filter(r => r.success);
+
+    // 少なくとも1つ成功していれば終了コード0
+    if (successful.length > 0) {
+      process.exit(0);
+    } else {
+      console.error('\n❌ すべてのダウンロードが失敗しました');
+      // ビルドは失敗させずに警告のみ
+      console.warn('⚠️  警告: GTFSデータがダウンロードできませんでした。手動でダウンロードしてください。');
+      process.exit(0); // ビルドは続行
+    }
   } catch (error) {
     console.error('予期しないエラーが発生しました:', error);
-    process.exit(1);
+    console.warn('⚠️  警告: GTFSデータのダウンロードをスキップします。');
+    process.exit(0); // ビルドは続行
   }
 })();

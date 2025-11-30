@@ -259,20 +259,52 @@ CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
    - `PORT` = `10000` (Renderが自動設定)
    - `CORS_ORIGIN` = 本番URLまたは `*`
 
-5. **GTFSデータのダウンロードとインポート**
-   デプロイ後、Render Shellで実行：
+5. **GTFSデータの確認**
+
+   **重要**: ビルド時に自動的にGTFSデータのダウンロード・インポートが試みられます。
+
+   ビルドログを確認して、以下のメッセージがあることを確認：
+   ```
+   ✅ ダウンロード完了: sendai_bus.zip
+   ✅ ダウンロード完了: shichigahama_gururinko.zip
+   ✅ GTFS import completed successfully!
+   ```
+
+   **ビルド時のダウンロード・インポートが失敗した場合**:
+   Render Shellで手動実行：
    ```bash
    cd server
    npm run download-gtfs    # GTFSデータをダウンロード
    npm run import-gtfs      # データベースにインポート
    ```
 
-   **重要**: 両方のコマンドを実行してください。download-gtfsを実行しないと、七ヶ浜町のバスデータがインポートされません。
+   サーバーを再起動：
+   - Renderダッシュボード → "Manual Deploy" → "Clear build cache & deploy"
 
 ### デプロイ後の確認
 
-- **ヘルスチェック**: `https://your-app.onrender.com/api/health`
-- **アプリケーション**: `https://your-app.onrender.com`
+#### ヘルスチェック
+```bash
+curl https://your-app.onrender.com/api/health
+```
+
+#### GTFSデータの確認
+```bash
+# 仙台駅周辺の停留所を検索
+curl "https://your-app.onrender.com/api/gtfs/stops/nearby?lat=38.2606&lon=140.8817&radius=1.0"
+
+# 七ヶ浜町周辺の停留所を検索
+curl "https://your-app.onrender.com/api/gtfs/stops/nearby?lat=38.2983&lon=141.0606&radius=1.0"
+```
+
+停留所が返ってくれば、GTFSデータが正しくインポートされています。
+
+#### フロントエンドでの確認
+1. `https://your-app.onrender.com` を開く
+2. 出発地点で「七ヶ浜町」を選択
+3. テーマで「自然」を選択
+4. スケジュールを生成
+5. 結果に「ぐるりんこ」バスが表示されることを確認
 
 ### 注意事項
 
