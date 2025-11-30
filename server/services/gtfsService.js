@@ -135,8 +135,12 @@ class GtfsService {
 
   /**
    * 指定時刻以降の出発便を取得
+   * @param {string} stopId - 停留所ID
+   * @param {string} afterTime - 指定時刻（HH:MM:SS形式）
+   * @param {Array<string>} routeIds - ルートIDの配列（指定された場合、そのルートの便のみ返す）
+   * @param {number} limit - 取得する便の最大数
    */
-  async getNextDepartures(stopId, afterTime, limit = 10) {
+  async getNextDepartures(stopId, afterTime, routeIds = [], limit = 10) {
     if (this.useDummyData) {
       return this.getDummyDepartures(afterTime, limit);
     }
@@ -149,24 +153,40 @@ class GtfsService {
         stop_id: stopId
       }, [], [
         ['departure_time', 'ASC']
-      ], limit * 2); // 余裕を持って取得
+      ], limit * 10); // 余裕を持って取得（フィルタリング後に十分な数を確保）
 
       if (!stoptimes || stoptimes.length === 0) {
         return [];
       }
 
+      // trip_idからroute_idを取得するため、tripsテーブルを参照
+      const tripIds = [...new Set(stoptimes.map(st => st.trip_id))];
+      const trips = await getTrips({
+        trip_id: tripIds
+      });
+
+      const tripToRouteMap = {};
+      trips.forEach(trip => {
+        tripToRouteMap[trip.trip_id] = trip.route_id;
+      });
+
       // 指定時刻以降の便をフィルタ
-      const departures = stoptimes
+      let departures = stoptimes
         .filter(st => st.departure_time >= afterTime)
-        .slice(0, limit)
         .map(st => ({
           trip_id: st.trip_id,
+          route_id: tripToRouteMap[st.trip_id],
           departure_time: st.departure_time,
           stop_id: stopId,
           stop_sequence: st.stop_sequence
         }));
 
-      return departures;
+      // routeIdsが指定されている場合、そのルートの便のみに絞る
+      if (routeIds && routeIds.length > 0) {
+        departures = departures.filter(dep => routeIds.includes(dep.route_id));
+      }
+
+      return departures.slice(0, limit);
     } catch (error) {
       console.error('Error fetching departures:', error);
       return this.getDummyDepartures(afterTime, limit);
@@ -287,6 +307,38 @@ class GtfsService {
   toRad(degrees) {
     return degrees * (Math.PI / 180);
   }
+  /**
+   * 指定したtripの指定した停留所での実際の到着時刻を取得
+   * @param {string} tripId - トリップID
+   * @param {string} stopId - 停留所ID
+   * @returns {Promise<string|null>} 到着時刻（HH:MM:SS形式）またはnull
+   */
+  async getArrivalTime(tripId, stopId) {
+    if (this.useDummyData) {
+      return null;
+    }
+
+    try {
+      await this.initializeDb();
+
+      const stoptimes = await getStoptimes({
+        trip_id: tripId,
+        stop_id: stopId
+      });
+
+      if (stoptimes && stoptimes.length > 0) {
+        // arrival_timeがあればそれを返す、なければdeparture_timeを返す
+        return stoptimes[0].arrival_time || stoptimes[0].departure_time;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching arrival time:', error);
+      return null;
+    }
+  }
+
+
 }
 
 export default new GtfsService();

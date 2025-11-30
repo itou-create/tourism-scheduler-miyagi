@@ -156,72 +156,80 @@ function ScheduleItem({ item, index }) {
               </div>
             )}
 
-            {/* 詳細な経路情報を表示 */}
+            {/* 詳細な経路情報を表示（Google Maps風） */}
             {item.mode === 'transit' && item.route && (
-              <div className="mt-2 text-xs text-gray-800 space-y-2 bg-white border border-gray-200 p-3 rounded">
+              <div className="mt-2 text-xs text-gray-800 space-y-1 bg-white border border-gray-200 p-3 rounded">
                 <div className="font-semibold text-gray-700 mb-2 border-b pb-1">
                   📍 移動経路の詳細
                 </div>
 
-                {/* 出発地からバス停までの徒歩 */}
-                <div className="flex items-start space-x-2 pl-2">
-                  <span className="text-gray-500">1️⃣</span>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-700">
-                      🚶 {item.from.name || '現在地'}から徒歩でバス停へ
+                {/* 時系列で表示（Google Maps風） */}
+                <div className="space-y-2">
+                  {/* 出発 */}
+                  <div className="flex items-start">
+                    <span className="font-bold text-blue-600 w-16">{item.departureTime}</span>
+                    <div className="flex-1">
+                      <span className="text-gray-700">🚶 {item.from.name || '現在地'}を出発</span>
                     </div>
-                    {item.route.fromStop && (
-                      <div className="text-gray-600 ml-4 mt-1">
-                        → <span className="font-medium text-orange-600">{item.route.fromStop.stop_name}</span>（バス停）
+                  </div>
+
+                  {/* バス停到着 */}
+                  {item.route.fromStop && item.boardingTime && (
+                    <>
+                      <div className="flex items-start">
+                        <span className="font-bold text-gray-600 w-16">{(() => {
+                          // 乗車時刻から待ち時間を引いてバス停到着時刻を計算
+                          const [h, m] = item.boardingTime.split(':');
+                          const boardingMinutes = parseInt(h) * 60 + parseInt(m);
+                          const arrivalMinutes = boardingMinutes - item.waitTime;
+                          const arrH = Math.floor(arrivalMinutes / 60);
+                          const arrM = arrivalMinutes % 60;
+                          return `${String(arrH).padStart(2, '0')}:${String(arrM).padStart(2, '0')}`;
+                        })()}</span>
+                        <div className="flex-1">
+                          <span className="text-gray-700">📍 <span className="font-medium text-orange-600">{item.route.fromStop.stop_name}</span>に到着</span>
+                          {item.waitTime > 0 && (
+                            <div className="text-gray-500 text-xs ml-4 mt-0.5">
+                              ⏱️ バスを待つ（{item.waitTime}分）
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+
+                      {/* バス乗車 */}
+                      <div className="flex items-start bg-blue-50 p-2 rounded -ml-1">
+                        <span className="font-bold text-blue-600 w-16 pl-1">{item.boardingTime}</span>
+                        <div className="flex-1">
+                          <span className="text-blue-700 font-medium">
+                            🚌 {item.routeName || 'バス'}に乗車
+                            {item.routeNumber && <span className="ml-1">（{item.routeNumber}番）</span>}
+                          </span>
+                          <div className="text-gray-600 text-xs ml-4 mt-0.5">
+                            🕐 乗車時間: {item.travelTime}分
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* バス降車 */}
+                      {item.alightingTime && (
+                        <div className="flex items-start">
+                          <span className="font-bold text-blue-600 w-16">{item.alightingTime}</span>
+                          <div className="flex-1">
+                            <span className="text-gray-700">🚏 <span className="font-medium text-green-600">{item.route.toStop.stop_name}</span>で降車</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* 目的地到着 */}
+                  <div className="flex items-start">
+                    <span className="font-bold text-green-600 w-16">{item.arrivalTime}</span>
+                    <div className="flex-1">
+                      <span className="text-gray-700">🎯 {item.to.name || '目的地'}に到着</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* バス乗車 */}
-                {item.route.fromStop && (
-                  <div className="flex items-start space-x-2 pl-2 bg-blue-50 p-2 rounded">
-                    <span className="text-blue-600">2️⃣</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-blue-700">
-                        🚌 バス乗車
-                      </div>
-                      <div className="text-gray-700 ml-4 mt-1 space-y-1">
-                        <div>
-                          <span className="text-orange-500 font-bold">●</span> 乗車: <span className="font-medium">{item.route.fromStop.stop_name}</span>
-                        </div>
-                        {item.routeNumber && (
-                          <div className="text-blue-600">
-                            ├ 路線: <span className="font-semibold">{item.routeNumber}番</span>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-green-500 font-bold">●</span> 降車: <span className="font-medium">{item.route.toStop.stop_name}</span>
-                        </div>
-                        <div className="text-gray-500 text-xs mt-1">
-                          🕐 乗車時間: {item.travelTime}分
-                          {item.waitTime > 0 && ` (待ち時間: ${item.waitTime}分)`}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* バス停から目的地までの徒歩 */}
-                {item.route.toStop && (
-                  <div className="flex items-start space-x-2 pl-2">
-                    <span className="text-gray-500">3️⃣</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-700">
-                        🚶 バス停から目的地へ徒歩
-                      </div>
-                      <div className="text-gray-600 ml-4 mt-1">
-                        <span className="font-medium text-green-600">{item.route.toStop.stop_name}</span>（バス停）から
-                        → <span className="font-medium">{item.to.name || '目的地'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 

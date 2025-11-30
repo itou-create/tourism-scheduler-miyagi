@@ -15,6 +15,7 @@ class OptimizerService {
     const currentTime = this.parseTime(startTime);
 
     for (const spot of spots) {
+      console.log(`🔍 Checking spot: ${spot.name}, lat: ${spot.lat}, lon: ${spot.lon}`);
       const route = await this.findBestRoute(startLocation, spot, currentTime, {});
       const travelTime = route ? (route.waitTime + route.travelTime) : null;
 
@@ -82,6 +83,22 @@ class OptimizerService {
         );
 
         if (firstRoute) {
+          // バスの場合、乗車時刻・降車時刻を計算
+          let boardingTime = null;
+          let alightingTime = null;
+
+          if (firstRoute.mode === 'transit' && firstRoute.departure) {
+            // バスの出発時刻（乗車時刻）
+            boardingTime = firstRoute.departure.departure_time;
+            // バスの到着時刻（降車時刻）: GTFSの実データがあればそれを使用、なければ推定
+            if (firstRoute.actualArrivalTime) {
+              alightingTime = firstRoute.actualArrivalTime;
+            } else {
+              const boardingMinutes = this.parseTime(boardingTime);
+              alightingTime = this.formatTime(boardingMinutes + firstRoute.travelTime);
+            }
+          }
+
           // 出発地からの移動を追加
           schedule.push({
             type: 'transit',
@@ -90,6 +107,8 @@ class OptimizerService {
             route: firstRoute,
             departureTime: this.formatTime(currentTime),
             arrivalTime: this.formatTime(currentTime + firstRoute.waitTime + firstRoute.travelTime),
+            boardingTime: boardingTime,  // バス停での乗車時刻
+            alightingTime: alightingTime, // バス停での降車時刻
             waitTime: firstRoute.waitTime,
             travelTime: firstRoute.travelTime,
             totalTime: firstRoute.waitTime + firstRoute.travelTime,
@@ -139,6 +158,20 @@ class OptimizerService {
             const firstLeg = route.firstLeg;
             const secondLeg = route.secondLeg;
 
+            // 第1区間の乗車時刻・降車時刻
+            let firstBoardingTime = null;
+            let firstAlightingTime = null;
+            if (firstLeg.departure) {
+              firstBoardingTime = firstLeg.departure.departure_time;
+              // GTFSの実データがあればそれを使用、なければ推定
+              if (firstLeg.actualArrivalTime) {
+                firstAlightingTime = firstLeg.actualArrivalTime;
+              } else {
+                const boardingMinutes = this.parseTime(firstBoardingTime);
+                firstAlightingTime = this.formatTime(boardingMinutes + firstLeg.travelTime);
+              }
+            }
+
             // 第1区間: 出発地 → 乗り換えハブ
             schedule.push({
               type: 'transit',
@@ -147,6 +180,8 @@ class OptimizerService {
               route: firstLeg,
               departureTime: this.formatTime(currentTime),
               arrivalTime: this.formatTime(currentTime + firstLeg.waitTime + firstLeg.travelTime),
+              boardingTime: firstBoardingTime,
+              alightingTime: firstAlightingTime,
               waitTime: firstLeg.waitTime,
               travelTime: firstLeg.travelTime,
               totalTime: firstLeg.waitTime + firstLeg.travelTime,
@@ -162,6 +197,20 @@ class OptimizerService {
             // 乗り換え待ち時間（5分）
             currentTime += 5;
 
+            // 第2区間の乗車時刻・降車時刻
+            let secondBoardingTime = null;
+            let secondAlightingTime = null;
+            if (secondLeg.departure) {
+              secondBoardingTime = secondLeg.departure.departure_time;
+              // GTFSの実データがあればそれを使用、なければ推定
+              if (secondLeg.actualArrivalTime) {
+                secondAlightingTime = secondLeg.actualArrivalTime;
+              } else {
+                const boardingMinutes = this.parseTime(secondBoardingTime);
+                secondAlightingTime = this.formatTime(boardingMinutes + secondLeg.travelTime);
+              }
+            }
+
             // 第2区間: 乗り換えハブ → 目的地
             schedule.push({
               type: 'transit',
@@ -170,6 +219,8 @@ class OptimizerService {
               route: secondLeg,
               departureTime: this.formatTime(currentTime),
               arrivalTime: this.formatTime(currentTime + secondLeg.waitTime + secondLeg.travelTime),
+              boardingTime: secondBoardingTime,
+              alightingTime: secondAlightingTime,
               waitTime: secondLeg.waitTime,
               travelTime: secondLeg.travelTime,
               totalTime: secondLeg.waitTime + secondLeg.travelTime,
@@ -182,6 +233,21 @@ class OptimizerService {
 
             currentTime += secondLeg.waitTime + secondLeg.travelTime;
           } else {
+            // バスの場合、乗車時刻・降車時刻を計算
+            let boardingTime = null;
+            let alightingTime = null;
+
+            if (route.mode === 'transit' && route.departure) {
+              boardingTime = route.departure.departure_time;
+              // GTFSの実データがあればそれを使用、なければ推定
+              if (route.actualArrivalTime) {
+                alightingTime = route.actualArrivalTime;
+              } else {
+                const boardingMinutes = this.parseTime(boardingTime);
+                alightingTime = this.formatTime(boardingMinutes + route.travelTime);
+              }
+            }
+
             // 通常の直接ルート
             schedule.push({
               type: 'transit',
@@ -190,6 +256,8 @@ class OptimizerService {
               route: route,
               departureTime: this.formatTime(currentTime),
               arrivalTime: this.formatTime(currentTime + route.waitTime + route.travelTime),
+              boardingTime: boardingTime,  // バス停での乗車時刻
+              alightingTime: alightingTime, // バス停での降車時刻
               waitTime: route.waitTime,
               travelTime: route.travelTime,
               totalTime: route.waitTime + route.travelTime,
@@ -227,6 +295,21 @@ class OptimizerService {
       );
 
       if (returnRoute) {
+        // 帰路のバス乗車時刻・降車時刻を計算
+        let returnBoardingTime = null;
+        let returnAlightingTime = null;
+
+        if (returnRoute.mode === 'transit' && returnRoute.departure) {
+          returnBoardingTime = returnRoute.departure.departure_time;
+          // GTFSの実データがあればそれを使用、なければ推定
+          if (returnRoute.actualArrivalTime) {
+            returnAlightingTime = returnRoute.actualArrivalTime;
+          } else {
+            const boardingMinutes = this.parseTime(returnBoardingTime);
+            returnAlightingTime = this.formatTime(boardingMinutes + returnRoute.travelTime);
+          }
+        }
+
         schedule.push({
           type: 'transit',
           from: currentLocation,
@@ -234,6 +317,8 @@ class OptimizerService {
           route: returnRoute,
           departureTime: this.formatTime(currentTime),
           arrivalTime: this.formatTime(currentTime + returnRoute.waitTime + returnRoute.travelTime),
+          boardingTime: returnBoardingTime,  // バス停での乗車時刻
+          alightingTime: returnAlightingTime, // バス停での降車時刻
           waitTime: returnRoute.waitTime,
           travelTime: returnRoute.travelTime,
           totalTime: returnRoute.waitTime + returnRoute.travelTime,
@@ -265,6 +350,8 @@ class OptimizerService {
    */
   async findBestRoute(from, to, currentTime, preferences = {}) {
     try {
+      console.log(`🔍 findBestRoute called - From: (${from.lat}, ${from.lon}), To: (${to.lat}, ${to.lon})`);
+
       // 出発地と目的地の近くの停留所を検索（半径を1.0kmに拡大）
       const fromStops = await gtfsService.findNearbyStops(from.lat, from.lon, 1.0);
       const toStops = await gtfsService.findNearbyStops(to.lat, to.lon, 1.0);
@@ -300,11 +387,13 @@ class OptimizerService {
 
           if (routes.length > 0) {
             routesFound++;
-            // 現在時刻以降の次の便を探す
+            // 現在時刻以降の次の便を探す（該当ルートのみ）
+            const routeIds = routes.map(r => r.route_id);
             const nextDepartures = await gtfsService.getNextDepartures(
               fromStop.stop_id,
               this.formatTime(currentTime),
-              5
+              routeIds,  // ルートIDの配列を渡す
+              5          // 取得する便の最大数
             );
 
             if (nextDepartures.length > 0) {
@@ -313,7 +402,22 @@ class OptimizerService {
 
             for (const departure of nextDepartures) {
               const waitTime = this.calculateWaitTime(currentTime, departure.departure_time);
-              const travelTime = this.estimateTravelTime(fromStop, toStop, departure);
+
+              // GTFSから実際の到着時刻を取得
+              const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id);
+              console.log(`🔍 getArrivalTime(${departure.trip_id}, ${toStop.stop_id}) = ${actualArrivalTime}`);
+
+              // 到着時刻がある場合は実データから移動時間を計算、なければ推定
+              let travelTime;
+              if (actualArrivalTime) {
+                const departureMinutes = this.parseTime(departure.departure_time);
+                const arrivalMinutes = this.parseTime(actualArrivalTime);
+                travelTime = arrivalMinutes - departureMinutes;
+                console.log(`✅ Using actual arrival time: ${departure.departure_time} -> ${actualArrivalTime} (${travelTime}min)`);
+              } else {
+                travelTime = this.estimateTravelTime(fromStop, toStop, departure);
+                console.log(`⚠️  No actual arrival time, using estimate: ${travelTime}min`);
+              }
 
               const totalTime = waitTime + travelTime;
 
@@ -329,6 +433,7 @@ class OptimizerService {
                   departure,
                   waitTime,
                   travelTime,
+                  actualArrivalTime,  // 実際の到着時刻を追加
                   mode: 'transit',
                   routeName: routeInfo ? routeInfo.route_long_name : null,
                   routeNumber: routeInfo ? routeInfo.route_short_name : null,
@@ -433,15 +538,30 @@ class OptimizerService {
             const routes = await gtfsService.findRoutesBetweenStops(fromStop.stop_id, hubStop.stop_id);
 
             if (routes.length > 0) {
+              const routeIds = routes.map(r => r.route_id);
               const nextDepartures = await gtfsService.getNextDepartures(
                 fromStop.stop_id,
                 this.formatTime(currentTime),
+                routeIds,
                 3
               );
 
               for (const departure of nextDepartures) {
                 const waitTime = this.calculateWaitTime(currentTime, departure.departure_time);
-                const travelTime = this.estimateTravelTime(fromStop, hubStop, departure);
+
+                // GTFSから実際の到着時刻を取得
+                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, hubStop.stop_id);
+
+                // 到着時刻がある場合は実データから移動時間を計算、なければ推定
+                let travelTime;
+                if (actualArrivalTime) {
+                  const departureMinutes = this.parseTime(departure.departure_time);
+                  const arrivalMinutes = this.parseTime(actualArrivalTime);
+                  travelTime = arrivalMinutes - departureMinutes;
+                } else {
+                  travelTime = this.estimateTravelTime(fromStop, hubStop, departure);
+                }
+
                 const totalTime = waitTime + travelTime;
 
                 if (totalTime < minFirstLegTime) {
@@ -454,6 +574,7 @@ class OptimizerService {
                     departure,
                     waitTime,
                     travelTime,
+                    actualArrivalTime,  // 実際の到着時刻を追加
                     arrivalTime: currentTime + waitTime + travelTime,
                     routeName: routeInfo ? routeInfo.route_long_name : null,
                     routeNumber: routeInfo ? routeInfo.route_short_name : null
@@ -476,15 +597,30 @@ class OptimizerService {
             const routes = await gtfsService.findRoutesBetweenStops(hubStop.stop_id, toStop.stop_id);
 
             if (routes.length > 0) {
+              const routeIds = routes.map(r => r.route_id);
               const nextDepartures = await gtfsService.getNextDepartures(
                 hubStop.stop_id,
                 this.formatTime(transferTime),
+                routeIds,
                 3
               );
 
               for (const departure of nextDepartures) {
                 const waitTime = this.calculateWaitTime(transferTime, departure.departure_time);
-                const travelTime = this.estimateTravelTime(hubStop, toStop, departure);
+
+                // GTFSから実際の到着時刻を取得
+                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id);
+
+                // 到着時刻がある場合は実データから移動時間を計算、なければ推定
+                let travelTime;
+                if (actualArrivalTime) {
+                  const departureMinutes = this.parseTime(departure.departure_time);
+                  const arrivalMinutes = this.parseTime(actualArrivalTime);
+                  travelTime = arrivalMinutes - departureMinutes;
+                } else {
+                  travelTime = this.estimateTravelTime(hubStop, toStop, departure);
+                }
+
                 const totalTime = waitTime + travelTime;
 
                 if (totalTime < minSecondLegTime) {
@@ -497,6 +633,7 @@ class OptimizerService {
                     departure,
                     waitTime,
                     travelTime,
+                    actualArrivalTime,  // 実際の到着時刻を追加
                     routeName: routeInfo ? routeInfo.route_long_name : null,
                     routeNumber: routeInfo ? routeInfo.route_short_name : null
                   };
