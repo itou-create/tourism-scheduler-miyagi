@@ -11,5 +11,7 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: CKAN_API_TOKEN
+        value: e6lvmepjlan4h8g6xs03tmrrk7wtz6ws7r8zm592bsut4ii1n6wujzzxv26fb56o
     healthCheckPath: /api/health
     autoDeploy: true
