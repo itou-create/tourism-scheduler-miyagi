@@ -72,6 +72,33 @@ const createBusStopIcon = (type = 'departure') => {
   });
 };
 
+// 出発地マーカーアイコン
+const createStartIcon = () => {
+  return L.divIcon({
+    className: 'start-marker',
+    html: `
+      <div style="
+        background-color: #dc2626;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      ">
+        🏁
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+};
+
 function LocationSelector({ onLocationSelect }) {
   useMapEvents({
     click: (e) => {
@@ -132,69 +159,165 @@ function RoadRoute({ schedule }) {
 
     if (!schedule || !schedule.schedule) return;
 
-    // スケジュールから移動区間を抽出
+    // スケジュールから移動区間を抽出（より詳細に）
     const transitSegments = [];
+
     for (let i = 0; i < schedule.schedule.length; i++) {
       const item = schedule.schedule[i];
 
-      if (item.type === 'transit' && item.from && item.to) {
-        let fromLat, fromLon, toLat, toLon, mode, routeNumber;
+      if (item.type === 'transit') {
+        let segments = [];
 
-        // 出発地の座標
-        if (item.from.lat !== undefined) {
-          fromLat = item.from.lat;
-          fromLon = item.from.lon;
-        } else if (item.from.spot) {
-          fromLat = item.from.spot.lat;
-          fromLon = item.from.spot.lon;
+        if (item.mode === 'walking') {
+          // 徒歩移動
+          let fromLat, fromLon, toLat, toLon;
+
+          // 出発地の座標
+          if (item.from.lat !== undefined) {
+            fromLat = item.from.lat;
+            fromLon = item.from.lon;
+          } else if (item.from.spot) {
+            fromLat = item.from.spot.lat;
+            fromLon = item.from.spot.lon;
+          }
+
+          // 目的地の座標
+          if (item.to.lat !== undefined) {
+            toLat = item.to.lat;
+            toLon = item.to.lon;
+          } else if (item.to.spot) {
+            toLat = item.to.spot.lat;
+            toLon = item.to.spot.lon;
+          }
+
+          if (fromLat && toLat) {
+            segments.push({
+              fromLat, fromLon, toLat, toLon,
+              mode: 'walking',
+              label: '🚶 徒歩',
+              description: item.isFirstTransit ? '出発地から移動' : '徒歩移動'
+            });
+          }
+        } else {
+          // バス移動 - より詳細なセグメントに分割
+
+          // 1. 出発地/観光地からバス停（乗車）までの徒歩
+          if (item.route && item.route.fromStop) {
+            let startLat, startLon;
+
+            if (item.from.lat !== undefined) {
+              startLat = item.from.lat;
+              startLon = item.from.lon;
+            } else if (item.from.spot) {
+              startLat = item.from.spot.lat;
+              startLon = item.from.spot.lon;
+            }
+
+            if (startLat) {
+              const stopLat = item.route.fromStop.stop_lat;
+              const stopLon = item.route.fromStop.stop_lon;
+
+              // 座標が異なる場合のみ追加（同じ場所の場合はスキップ）
+              const distance = Math.sqrt(
+                Math.pow(startLat - stopLat, 2) + Math.pow(startLon - stopLon, 2)
+              );
+
+              if (distance > 0.0001) { // 約10m以上離れている場合
+                segments.push({
+                  fromLat: startLat, fromLon: startLon,
+                  toLat: stopLat, toLon: stopLon,
+                  mode: 'walking',
+                  label: '🚶 徒歩',
+                  description: `${item.route.fromStop.stop_name}まで徒歩`
+                });
+              }
+            }
+          }
+
+          // 2. バス停間のバス移動
+          if (item.route && item.route.fromStop && item.route.toStop) {
+            segments.push({
+              fromLat: item.route.fromStop.stop_lat,
+              fromLon: item.route.fromStop.stop_lon,
+              toLat: item.route.toStop.stop_lat,
+              toLon: item.route.toStop.stop_lon,
+              mode: 'bus',
+              routeNumber: item.routeNumber,
+              routeName: item.routeName,
+              label: `🚌 ${item.routeName || 'バス'}`,
+              description: item.routeNumber ? `${item.routeNumber}番` : 'バス移動'
+            });
+          }
+
+          // 3. バス停（降車）から目的地/観光地までの徒歩
+          if (item.route && item.route.toStop) {
+            let endLat, endLon;
+
+            if (item.to.lat !== undefined) {
+              endLat = item.to.lat;
+              endLon = item.to.lon;
+            } else if (item.to.spot) {
+              endLat = item.to.spot.lat;
+              endLon = item.to.spot.lon;
+            }
+
+            if (endLat) {
+              const stopLat = item.route.toStop.stop_lat;
+              const stopLon = item.route.toStop.stop_lon;
+
+              const distance = Math.sqrt(
+                Math.pow(endLat - stopLat, 2) + Math.pow(endLon - stopLon, 2)
+              );
+
+              if (distance > 0.0001) { // 約10m以上離れている場合
+                segments.push({
+                  fromLat: stopLat, fromLon: stopLon,
+                  toLat: endLat, toLon: endLon,
+                  mode: 'walking',
+                  label: '🚶 徒歩',
+                  description: `${item.route.toStop.stop_name}から徒歩`
+                });
+              }
+            }
+          }
         }
 
-        // 目的地の座標
-        if (item.to.lat !== undefined) {
-          toLat = item.to.lat;
-          toLon = item.to.lon;
-        } else if (item.to.spot) {
-          toLat = item.to.spot.lat;
-          toLon = item.to.spot.lon;
-        }
-
-        mode = item.mode;
-        routeNumber = item.routeNumber;
-
-        if (fromLat && toLat) {
-          transitSegments.push({ fromLat, fromLon, toLat, toLon, mode, routeNumber });
-        }
+        transitSegments.push(...segments);
       }
     }
 
     // 各区間のルートを取得して描画
     transitSegments.forEach((segment, index) => {
-      const { fromLat, fromLon, toLat, toLon, mode, routeNumber } = segment;
+      const { fromLat, fromLon, toLat, toLon, mode, label, description } = segment;
 
-      // OSRM APIでルート取得
+      // OSRM APIでルート取得（徒歩の場合はfoot、バスの場合もfootで道路を取得）
       fetch(`https://router.project-osrm.org/route/v1/foot/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
         .then(response => response.json())
         .then(data => {
           if (data.code === 'Ok' && data.routes && data.routes[0]) {
             const coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
-            // 色を決定（徒歩=緑、バス=青）
+            // 色を決定（徒歩=緑の点線、バス=青の実線）
             const color = mode === 'walking' ? '#10b981' : '#3b82f6';
-            const weight = mode === 'walking' ? 3 : 4;
-            const dashArray = mode === 'walking' ? '5, 10' : null;
+            const weight = mode === 'walking' ? 4 : 5;
+            const dashArray = mode === 'walking' ? '8, 12' : null; // 徒歩は点線
+            const opacity = mode === 'walking' ? 0.6 : 0.8;
 
             // ルートを描画
             const polyline = L.polyline(coordinates, {
               color: color,
               weight: weight,
-              opacity: 0.7,
+              opacity: opacity,
               dashArray: dashArray
             }).addTo(map);
 
             // ポップアップを追加
-            const popupContent = mode === 'walking'
-              ? '🚶 徒歩ルート'
-              : `🚌 バスルート${routeNumber ? ` (${routeNumber}番)` : ''}`;
+            const popupContent = `
+              <div style="min-width: 120px;">
+                <strong>${label}</strong><br/>
+                <span style="font-size: 12px; color: #666;">${description}</span>
+              </div>
+            `;
 
             polyline.bindPopup(popupContent);
 
@@ -204,15 +327,25 @@ function RoadRoute({ schedule }) {
         .catch(error => {
           console.error('ルート取得エラー:', error);
           // エラー時は直線で描画
+          const color = mode === 'walking' ? '#10b981' : '#3b82f6';
           const polyline = L.polyline(
             [[fromLat, fromLon], [toLat, toLon]],
             {
-              color: mode === 'walking' ? '#10b981' : '#3b82f6',
-              weight: 3,
+              color: color,
+              weight: mode === 'walking' ? 4 : 5,
               opacity: 0.5,
               dashArray: '10, 10'
             }
           ).addTo(map);
+
+          const popupContent = `
+            <div style="min-width: 120px;">
+              <strong>${label}</strong><br/>
+              <span style="font-size: 12px; color: #666;">${description} (直線)</span>
+            </div>
+          `;
+
+          polyline.bindPopup(popupContent);
 
           routeLayers.current.push(polyline);
         });
@@ -272,6 +405,31 @@ function Map({ center, schedule, onLocationSelect }) {
 
         {/* 道路に沿ったルート描画 */}
         <RoadRoute schedule={schedule} />
+
+      {/* 出発地マーカー表示 */}
+      {schedule && schedule.schedule && schedule.schedule.length > 0 && (() => {
+        const firstTransit = schedule.schedule.find(item => item.type === 'transit' && item.isFirstTransit);
+        if (firstTransit && firstTransit.from && firstTransit.from.lat) {
+          return (
+            <Marker
+              key="start-location"
+              position={[firstTransit.from.lat, firstTransit.from.lon]}
+              icon={createStartIcon()}
+            >
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-bold text-base mb-1">🏁 出発地</h3>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>出発時刻: {firstTransit.departureTime}</p>
+                    <p>座標: ({firstTransit.from.lat.toFixed(4)}, {firstTransit.from.lon.toFixed(4)})</p>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        }
+        return null;
+      })()}
 
       {/* スケジュールのマーカー表示 */}
       {schedule && schedule.schedule && schedule.schedule.map((item, index) => {
