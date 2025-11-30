@@ -22,10 +22,12 @@ class PlacesService {
 
       // 位置情報でフィルタリング（radiusをkmに変換）
       const radiusKm = radius / 1000;
+      const minDistanceKm = 0.1; // 最小距離100m（出発地と同じ場所のスポットを除外）
       const nearbySpots = openDataSpots.filter(spot => {
         if (!spot.lat || !spot.lon) return false;
         const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
-        return distance <= radiusKm;
+        // 最小距離以上、最大半径以内のスポットのみ
+        return distance >= minDistanceKm && distance <= radiusKm;
       });
 
       if (nearbySpots.length > 0) {

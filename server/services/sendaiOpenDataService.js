@@ -191,9 +191,11 @@ class SendaiOpenDataService {
 
     // 緯度経度がない場合、既知の場所から検索
     if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
+      console.log(`⚠️  緯度経度がないスポット: ${name}`);
       // まず既知の場所から検索
       const knownLocation = this.findKnownLocation(name);
       if (knownLocation) {
+        console.log(`✅ 既知の場所から座標を取得: ${name} -> (${knownLocation.lat}, ${knownLocation.lon})`);
         lat = knownLocation.lat;
         lon = knownLocation.lon;
       } else {
@@ -202,6 +204,7 @@ class SendaiOpenDataService {
           addressKey ? record[addressKey] : null,
           name
         );
+        console.log(`📍 住所から座標を推定: ${name} -> (${estimated.lat}, ${estimated.lon})`);
         lat = estimated.lat;
         lon = estimated.lon;
       }
