@@ -21,18 +21,16 @@ const GTFS_SOURCES = [
   {
     name: '仙台市営バス',
     id: 'sendai_bus',
-    // 宮城県オープンデータポータルのURL（最新版を取得）
-    url: 'https://miyagi.dataeye.jp/dataset/e1e43e08-3b8f-49db-87d3-70802b0b77bb/resource/aa69fe64-b32a-4e85-a9e1-14e18f3ffa2e/download/sendai_bus.zip',
-    filename: 'sendai_bus.zip',
-    requiresAuth: false
+    // 仙台市公式サイトから取得
+    url: 'https://www.city.sendai.jp/joho-kikaku/shise/security/kokai/documents/gtfs-jp_sendaicitybus_current_date.zip',
+    filename: 'sendai_bus.zip'
   },
   {
     name: '七ヶ浜町民バス「ぐるりんこ」',
     id: 'shichigahama_gururinko',
-    // CKAN ODPT のリソースURL（認証が必要）
-    url: 'https://ckan.odpt.org/dataset/e58f6e8a-d1fb-4f5a-b336-bb97e0490e19/resource/e58f6e8a-d1fb-4f5a-b336-bb97e0490e19/download/shichigahama_town_all_gururinko.zip',
-    filename: 'shichigahama_gururinko.zip',
-    requiresAuth: true
+    // GTFS Data JPから取得（https://api.gtfs-data.jp/）
+    url: 'https://api.gtfs-data.jp/v2/organizations/shichigahamatown/feeds/Gururinko/files/feed.zip?rid=current',
+    filename: 'shichigahama_gururinko.zip'
   }
 ];
 
@@ -56,18 +54,11 @@ async function downloadGtfsFile(source) {
   console.log(`   URL: ${source.url}`);
 
   try {
-    // ヘッダーを設定
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    };
-
-    // CKAN APIアクセストークンを追加（環境変数から取得）
-    if (source.requiresAuth && process.env.CKAN_API_TOKEN) {
-      headers['X-CKAN-API-Key'] = process.env.CKAN_API_TOKEN;
-      console.log(`   🔑 Using CKAN API token`);
-    }
-
-    const response = await fetch(source.url, { headers });
+    const response = await fetch(source.url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
