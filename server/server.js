@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import schedulerRoutes from './routes/scheduler.js';
 import gtfsRoutes from './routes/gtfs.js';
 import spotsRoutes from './routes/spots.js';
+import sendaiOpenDataService from './services/sendaiOpenDataService.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -73,7 +74,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+
+  // 仙台市オープンデータを初期化
+  console.log('\n🔄 仙台市オープンデータを初期化中...');
+  await sendaiOpenDataService.initialize();
+  console.log('✅ サーバーの初期化が完了しました\n');
 });

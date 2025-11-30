@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { config } from '../utils/config.js';
+import sendaiOpenDataService from './sendaiOpenDataService.js';
 
 /**
  * Places Service
- * Google Places APIを使用して観光スポット情報を取得
+ * 観光スポット情報を取得（仙台市オープンデータ優先、Google Places APIフォールバック）
  */
 class PlacesService {
   constructor() {
@@ -15,40 +16,60 @@ class PlacesService {
    * テーマに基づいて観光スポットを検索
    */
   async searchSpotsByTheme(lat, lon, theme, radius = 5000) {
-    // APIキーがない場合は、テーマベースのダミーデータを返す
-    if (!this.apiKey) {
-      return this.getDummySpotsByTheme(lat, lon, theme);
-    }
+    // まず仙台市オープンデータから検索
+    if (sendaiOpenDataService.isDataLoaded()) {
+      const openDataSpots = sendaiOpenDataService.getSpotsByTheme(theme);
 
-    const typeMapping = {
-      '歴史': ['museum', 'tourist_attraction', 'place_of_worship'],
-      '自然': ['park', 'natural_feature'],
-      'グルメ': ['restaurant', 'cafe', 'food'],
-      '文化': ['art_gallery', 'museum', 'library'],
-      'ショッピング': ['shopping_mall', 'store'],
-      'エンタメ': ['amusement_park', 'movie_theater', 'night_club']
-    };
+      // 位置情報でフィルタリング（radiusをkmに変換）
+      const radiusKm = radius / 1000;
+      const nearbySpots = openDataSpots.filter(spot => {
+        if (!spot.lat || !spot.lon) return false;
+        const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
+        return distance <= radiusKm;
+      });
 
-    const types = typeMapping[theme] || ['tourist_attraction'];
-    const spots = [];
-
-    try {
-      for (const type of types) {
-        const results = await this.nearbySearch(lat, lon, radius, type);
-        spots.push(...results);
+      if (nearbySpots.length > 0) {
+        console.log(`✅ 仙台市オープンデータから${nearbySpots.length}件のスポットを取得`);
+        return nearbySpots;
       }
-
-      // 重複を除去（idベース）
-      const uniqueSpots = Array.from(
-        new Map(spots.map(spot => [spot.id, spot])).values()
-      );
-
-      return uniqueSpots.length > 0 ? uniqueSpots : this.getDummySpotsByTheme(lat, lon, theme);
-    } catch (error) {
-      console.error('Error searching spots:', error);
-      // エラー時はダミーデータを返す
-      return this.getDummySpotsByTheme(lat, lon, theme);
     }
+
+    // オープンデータがない場合、APIキーがあればGoogle Places APIを使用
+    if (this.apiKey) {
+      const typeMapping = {
+        '歴史': ['museum', 'tourist_attraction', 'place_of_worship'],
+        '自然': ['park', 'natural_feature'],
+        'グルメ': ['restaurant', 'cafe', 'food'],
+        '文化': ['art_gallery', 'museum', 'library'],
+        'ショッピング': ['shopping_mall', 'store'],
+        'エンタメ': ['amusement_park', 'movie_theater', 'night_club']
+      };
+
+      const types = typeMapping[theme] || ['tourist_attraction'];
+      const spots = [];
+
+      try {
+        for (const type of types) {
+          const results = await this.nearbySearch(lat, lon, radius, type);
+          spots.push(...results);
+        }
+
+        // 重複を除去（idベース）
+        const uniqueSpots = Array.from(
+          new Map(spots.map(spot => [spot.id, spot])).values()
+        );
+
+        if (uniqueSpots.length > 0) {
+          return uniqueSpots;
+        }
+      } catch (error) {
+        console.error('Error searching spots:', error);
+      }
+    }
+
+    // 最後のフォールバック：ダミーデータ
+    console.log('⚠️  オープンデータとAPIが利用できないため、ダミーデータを使用');
+    return this.getDummySpotsByTheme(lat, lon, theme);
   }
 
   /**
