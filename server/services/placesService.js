@@ -13,26 +13,136 @@ class PlacesService {
   }
 
   /**
-   * テーマに基づいて観光スポットを検索
+   * コース別のテーママッピング
+   */
+  getCourseThemes(course) {
+    const courseMapping = {
+      '初めて訪れた人向け': {
+        themes: ['自然', '歴史', 'グルメ'],
+        weights: [0.4, 0.3, 0.3], // 自然40%, 歴史30%, グルメ30%
+        description: '定番スポットをバランスよく周遊'
+      },
+      '2回目の人向け': {
+        themes: ['自然', '歴史', '文化', 'グルメ'],
+        weights: [0.3, 0.3, 0.2, 0.2],
+        filterFunc: (spot) => spot.rating <= 4.2, // 穴場スポット優先
+        description: '知る人ぞ知る穴場スポット'
+      },
+      '歴史とカフェ': {
+        themes: ['歴史', 'グルメ'],
+        weights: [0.5, 0.5],
+        filterFunc: (spot) => spot.theme === '歴史' || (spot.theme === 'グルメ' && (spot.types?.includes('cafe') || spot.name.includes('カフェ'))),
+        description: '歴史スポットとカフェを楽しむ'
+      },
+      '絶景とグルメ': {
+        themes: ['自然', 'グルメ'],
+        weights: [0.6, 0.4],
+        filterFunc: (spot) => {
+          if (spot.theme === '自然') {
+            return spot.types?.includes('viewpoint') || spot.name.includes('展望') || spot.name.includes('眺') || spot.rating >= 4.3;
+          }
+          return spot.theme === 'グルメ';
+        },
+        description: '絶景ポイントとグルメを満喫'
+      },
+      'アクティブ': {
+        themes: ['エンタメ', '自然'],
+        weights: [0.6, 0.4],
+        filterFunc: (spot) => spot.types?.includes('activity') || spot.types?.includes('cycling') || spot.types?.includes('beach') || spot.theme === 'エンタメ',
+        description: 'アクティビティを楽しむ'
+      },
+      'ファミリー': {
+        themes: ['エンタメ', '自然', '文化'],
+        weights: [0.4, 0.4, 0.2],
+        filterFunc: (spot) => {
+          const familyTypes = ['park', 'beach', 'museum', 'activity', 'gym'];
+          return familyTypes.some(type => spot.types?.includes(type)) || ['エンタメ', '自然', '文化'].includes(spot.theme);
+        },
+        description: '家族みんなで楽しめるスポット'
+      }
+    };
+
+    return courseMapping[course] || null;
+  }
+
+  /**
+   * テーマ/コースに基づいて観光スポットを検索
    */
   async searchSpotsByTheme(lat, lon, theme, radius = 5000) {
+    console.log(`🔍 searchSpotsByTheme called: theme="${theme}", lat=${lat}, lon=${lon}, radius=${radius}`);
+
     // まず仙台市オープンデータから検索
     if (sendaiOpenDataService.isDataLoaded()) {
-      const openDataSpots = sendaiOpenDataService.getSpotsByTheme(theme);
+      // コース別の処理
+      const courseConfig = this.getCourseThemes(theme);
+      console.log(`📋 courseConfig:`, courseConfig ? `Found for "${theme}"` : `Not found for "${theme}"`);
 
-      // 位置情報でフィルタリング（radiusをkmに変換）
-      const radiusKm = radius / 1000;
-      const minDistanceKm = 0.1; // 最小距離100m（出発地と同じ場所のスポットを除外）
-      const nearbySpots = openDataSpots.filter(spot => {
-        if (!spot.lat || !spot.lon) return false;
-        const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
-        // 最小距離以上、最大半径以内のスポットのみ
-        return distance >= minDistanceKm && distance <= radiusKm;
-      });
+      let openDataSpots = [];
 
-      if (nearbySpots.length > 0) {
-        console.log(`✅ 仙台市オープンデータから${nearbySpots.length}件のスポットを取得`);
-        return nearbySpots;
+      if (courseConfig) {
+        // コースの場合：複数のテーマからスポットを取得してミックス
+        console.log(`📋 コース「${theme}」で検索: ${courseConfig.description}`);
+
+        const allSpots = sendaiOpenDataService.getAllSpots();
+        console.log(`📊 Total spots in database: ${allSpots.length}`);
+
+        // 位置情報とコースのフィルタでフィルタリング
+        const radiusKm = radius / 1000;
+        const minDistanceKm = 0.1;
+
+        openDataSpots = allSpots.filter(spot => {
+          if (!spot.lat || !spot.lon) return false;
+
+          const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
+          if (distance < minDistanceKm || distance > radiusKm) return false;
+
+          // コース固有のフィルタを適用
+          if (courseConfig.filterFunc) {
+            return courseConfig.filterFunc(spot);
+          }
+
+          // フィルタ関数がない場合は、テーマで絞り込み
+          return courseConfig.themes.includes(spot.theme);
+        });
+
+        console.log(`📊 After filtering: ${openDataSpots.length} spots`);
+
+        // テーマごとにバランスよく選択（シャッフルして多様性を確保）
+        const spotsByTheme = {};
+        courseConfig.themes.forEach(t => {
+          spotsByTheme[t] = openDataSpots.filter(s => s.theme === t);
+        });
+
+        // 各テーマからランダムに選択してミックス
+        const mixed = [];
+        const totalCount = Math.min(openDataSpots.length, 20); // 最大20件
+        courseConfig.themes.forEach((t, idx) => {
+          const count = Math.ceil(totalCount * courseConfig.weights[idx]);
+          const themeSpots = spotsByTheme[t] || [];
+          // ランダムシャッフル
+          const shuffled = themeSpots.sort(() => Math.random() - 0.5);
+          mixed.push(...shuffled.slice(0, count));
+        });
+
+        openDataSpots = mixed;
+      } else {
+        // 従来の単一テーマの処理
+        openDataSpots = sendaiOpenDataService.getSpotsByTheme(theme);
+
+        // 位置情報でフィルタリング（radiusをkmに変換）
+        const radiusKm = radius / 1000;
+        const minDistanceKm = 0.1; // 最小距離100m（出発地と同じ場所のスポットを除外）
+        openDataSpots = openDataSpots.filter(spot => {
+          if (!spot.lat || !spot.lon) return false;
+          const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
+          // 最小距離以上、最大半径以内のスポットのみ
+          return distance >= minDistanceKm && distance <= radiusKm;
+        });
+      }
+
+      if (openDataSpots.length > 0) {
+        console.log(`✅ 仙台市オープンデータから${openDataSpots.length}件のスポットを取得`);
+        return openDataSpots;
       }
     }
 

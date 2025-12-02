@@ -2,6 +2,20 @@
 
 export const LOCATION_PRESETS = [
   {
+    id: 'shichigahama',
+    name: '七ヶ浜町',
+    lat: 38.2983,
+    lon: 141.0606,
+    description: '七ヶ浜町役場周辺（ぐるりんこバス運行エリア）'
+  },
+  {
+    id: 'shiogama_station',
+    name: '塩釜駅',
+    lat: 38.3142,
+    lon: 141.0197,
+    description: 'JR仙石線 本塩釜駅'
+  },
+  {
     id: 'sendai_station',
     name: '仙台駅',
     lat: 38.2606,
@@ -49,13 +63,6 @@ export const LOCATION_PRESETS = [
     lat: 38.2528,
     lon: 140.8375,
     description: '地下鉄東西線'
-  },
-  {
-    id: 'shichigahama',
-    name: '七ヶ浜町',
-    lat: 38.2983,
-    lon: 141.0606,
-    description: '七ヶ浜町役場周辺（ぐるりんこバス運行エリア）'
   },
   {
     id: 'custom',

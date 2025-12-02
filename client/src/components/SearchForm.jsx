@@ -3,23 +3,23 @@ import LocationMapModal from './LocationMapModal';
 import { LOCATION_PRESETS, getPresetLocation } from '../data/locationPresets';
 
 const THEMES = [
-  { value: '歴史', label: '歴史・文化財' },
-  { value: '自然', label: '自然・公園' },
-  { value: 'グルメ', label: 'グルメ・飲食' },
-  { value: '文化', label: '芸術・文化' },
-  { value: 'ショッピング', label: 'ショッピング' },
-  { value: 'エンタメ', label: 'エンターテイメント' }
+  { value: '初めて訪れた人向け', label: '初めて訪れた人向けコース' },
+  { value: '2回目の人向け', label: '2回目の人向けコース（穴場スポット）' },
+  { value: '歴史とカフェ', label: '歴史とカフェを楽しむコース' },
+  { value: '絶景とグルメ', label: '絶景とグルメを満喫コース' },
+  { value: 'アクティブ', label: 'アクティブに楽しむコース' },
+  { value: 'ファミリー', label: 'ファミリー向けコース' }
 ];
 
 function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
   const [formData, setFormData] = useState({
-    theme: '歴史',
+    theme: '初めて訪れた人向け',
     startTime: '09:00',
     visitDuration: 60,
     maxSpots: 5,
     scenicPriority: 3
   });
-  const [selectedPreset, setSelectedPreset] = useState('sendai_station');
+  const [selectedPreset, setSelectedPreset] = useState('shichigahama');
   const [showMapModal, setShowMapModal] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
 

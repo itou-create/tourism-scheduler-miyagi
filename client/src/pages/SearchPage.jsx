@@ -9,9 +9,9 @@ function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({
-    lat: 38.2606,
-    lon: 140.8817
-  }); // デフォルト: 仙台駅
+    lat: 38.2983,
+    lon: 141.0606
+  }); // デフォルト: 七ヶ浜町
 
   const handleGenerateSchedule = async (params) => {
     setLoading(true);
