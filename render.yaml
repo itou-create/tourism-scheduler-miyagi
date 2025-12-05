@@ -1,39 +1,17 @@
 services:
-  # フロントエンド（Static Site）: スリープしない
   - type: web
-    name: tourism-scheduler-frontend
-    runtime: static
-    region: oregon
-    plan: free
-    buildCommand: cd client && npm ci && npm run build
-    staticPublishPath: client/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://tourism-scheduler-api.onrender.com/api
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=0, must-revalidate
-    autoDeploy: true
-
-  # バックエンド（API専用）: スリープする可能性あり
-  - type: web
-    name: tourism-scheduler-api
+    name: tourism-scheduler-miyagi
     runtime: node
     region: oregon
     plan: free
-    buildCommand: cd server && npm ci && npm run download-gtfs && npm run import-gtfs
-    startCommand: cd server && npm start
+    buildCommand: npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: CORS_ORIGIN
-        value: https://tourism-scheduler-frontend.onrender.com
+        value: '*'
     healthCheckPath: /api/health
     autoDeploy: true
