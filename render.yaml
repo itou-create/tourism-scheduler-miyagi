@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: free
     buildCommand: cd client && npm ci && npm run build
-    staticPublishPath: ./client/dist
+    staticPublishPath: client/dist
     envVars:
       - key: VITE_API_URL
         value: https://tourism-scheduler-api.onrender.com/api
