@@ -83,23 +83,15 @@ class OptimizerService {
         );
 
         if (firstRoute) {
-          // バスの場合、乗車時刻・降車時刻を計算
+          // バスの場合、乗車時刻・降車時刻をスケジュール上の時刻として計算
           let boardingTime = null;
           let alightingTime = null;
 
           if (firstRoute.mode === 'transit' && firstRoute.departure) {
-            // バスの出発時刻（乗車時刻）- 秒を削除してHH:MM形式に
-            const rawBoardingTime = firstRoute.departure.departure_time;
-            boardingTime = rawBoardingTime.substring(0, 5); // "HH:MM:SS" → "HH:MM"
-
-            // バスの到着時刻（降車時刻）: GTFSの実データがあればそれを使用、なければ推定
-            if (firstRoute.actualArrivalTime) {
-              // GTFSから取得した時刻も秒を削除
-              alightingTime = firstRoute.actualArrivalTime.substring(0, 5); // "HH:MM:SS" → "HH:MM"
-            } else {
-              const boardingMinutes = this.parseTime(boardingTime);
-              alightingTime = this.formatTime(boardingMinutes + firstRoute.travelTime);
-            }
+            // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
+            boardingTime = this.formatTime(currentTime + firstRoute.waitTime);
+            // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
+            alightingTime = this.formatTime(currentTime + firstRoute.waitTime + firstRoute.travelTime);
           }
 
           // 出発地からの移動を追加
@@ -161,20 +153,14 @@ class OptimizerService {
             const firstLeg = route.firstLeg;
             const secondLeg = route.secondLeg;
 
-            // 第1区間の乗車時刻・降車時刻
+            // 第1区間の乗車時刻・降車時刻（スケジュール上の時刻）
             let firstBoardingTime = null;
             let firstAlightingTime = null;
             if (firstLeg.departure) {
-              // 秒を削除してHH:MM形式に
-              const rawFirstBoardingTime = firstLeg.departure.departure_time;
-              firstBoardingTime = rawFirstBoardingTime.substring(0, 5);
-              // GTFSの実データがあればそれを使用、なければ推定
-              if (firstLeg.actualArrivalTime) {
-                firstAlightingTime = firstLeg.actualArrivalTime.substring(0, 5);
-              } else {
-                const boardingMinutes = this.parseTime(firstBoardingTime);
-                firstAlightingTime = this.formatTime(boardingMinutes + firstLeg.travelTime);
-              }
+              // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
+              firstBoardingTime = this.formatTime(currentTime + firstLeg.waitTime);
+              // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
+              firstAlightingTime = this.formatTime(currentTime + firstLeg.waitTime + firstLeg.travelTime);
             }
 
             // 第1区間: 出発地 → 乗り換えハブ
@@ -202,20 +188,14 @@ class OptimizerService {
             // 乗り換え待ち時間（5分）
             currentTime += 5;
 
-            // 第2区間の乗車時刻・降車時刻
+            // 第2区間の乗車時刻・降車時刻（スケジュール上の時刻）
             let secondBoardingTime = null;
             let secondAlightingTime = null;
             if (secondLeg.departure) {
-              // 秒を削除してHH:MM形式に
-              const rawSecondBoardingTime = secondLeg.departure.departure_time;
-              secondBoardingTime = rawSecondBoardingTime.substring(0, 5);
-              // GTFSの実データがあればそれを使用、なければ推定
-              if (secondLeg.actualArrivalTime) {
-                secondAlightingTime = secondLeg.actualArrivalTime.substring(0, 5);
-              } else {
-                const boardingMinutes = this.parseTime(secondBoardingTime);
-                secondAlightingTime = this.formatTime(boardingMinutes + secondLeg.travelTime);
-              }
+              // スケジュール上の乗車時刻 = 現在時刻（第1区間後+乗り換え時間） + 待ち時間
+              secondBoardingTime = this.formatTime(currentTime + secondLeg.waitTime);
+              // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
+              secondAlightingTime = this.formatTime(currentTime + secondLeg.waitTime + secondLeg.travelTime);
             }
 
             // 第2区間: 乗り換えハブ → 目的地
@@ -240,21 +220,15 @@ class OptimizerService {
 
             currentTime += secondLeg.waitTime + secondLeg.travelTime;
           } else {
-            // バスの場合、乗車時刻・降車時刻を計算
+            // バスの場合、乗車時刻・降車時刻をスケジュール上の時刻として計算
             let boardingTime = null;
             let alightingTime = null;
 
             if (route.mode === 'transit' && route.departure) {
-              // 秒を削除してHH:MM形式に
-              const rawBoardingTime = route.departure.departure_time;
-              boardingTime = rawBoardingTime.substring(0, 5);
-              // GTFSの実データがあればそれを使用、なければ推定
-              if (route.actualArrivalTime) {
-                alightingTime = route.actualArrivalTime.substring(0, 5);
-              } else {
-                const boardingMinutes = this.parseTime(boardingTime);
-                alightingTime = this.formatTime(boardingMinutes + route.travelTime);
-              }
+              // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
+              boardingTime = this.formatTime(currentTime + route.waitTime);
+              // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
+              alightingTime = this.formatTime(currentTime + route.waitTime + route.travelTime);
             }
 
             // 通常の直接ルート
@@ -304,21 +278,15 @@ class OptimizerService {
       );
 
       if (returnRoute) {
-        // 帰路のバス乗車時刻・降車時刻を計算
+        // 帰路のバス乗車時刻・降車時刻をスケジュール上の時刻として計算
         let returnBoardingTime = null;
         let returnAlightingTime = null;
 
         if (returnRoute.mode === 'transit' && returnRoute.departure) {
-          // 秒を削除してHH:MM形式に
-          const rawReturnBoardingTime = returnRoute.departure.departure_time;
-          returnBoardingTime = rawReturnBoardingTime.substring(0, 5);
-          // GTFSの実データがあればそれを使用、なければ推定
-          if (returnRoute.actualArrivalTime) {
-            returnAlightingTime = returnRoute.actualArrivalTime.substring(0, 5);
-          } else {
-            const boardingMinutes = this.parseTime(returnBoardingTime);
-            returnAlightingTime = this.formatTime(boardingMinutes + returnRoute.travelTime);
-          }
+          // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
+          returnBoardingTime = this.formatTime(currentTime + returnRoute.waitTime);
+          // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
+          returnAlightingTime = this.formatTime(currentTime + returnRoute.waitTime + returnRoute.travelTime);
         }
 
         schedule.push({
