@@ -743,9 +743,10 @@ class OptimizerService {
 
   /**
    * 分を時刻文字列に変換 (minutes → HH:MM)
+   * GTFSの深夜便対応: 24時を超える時刻もそのまま表示（例: 25:29）
    */
   formatTime(minutes) {
-    const hours = Math.floor(minutes / 60) % 24;
+    const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }

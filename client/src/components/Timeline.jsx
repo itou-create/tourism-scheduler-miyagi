@@ -1,3 +1,20 @@
+/**
+ * GTFSの24時を超える時刻を分かりやすく表示
+ * 例: "25:29" → "翌日 01:29"
+ */
+function formatDisplayTime(timeStr) {
+  if (!timeStr) return '';
+
+  const [hours, minutes] = timeStr.split(':').map(Number);
+
+  if (hours >= 24) {
+    const displayHours = hours % 24;
+    return `翌日 ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  return timeStr;
+}
+
 function Timeline({ items }) {
   if (!items || items.length === 0) {
     return null;
@@ -36,7 +53,7 @@ function TimelineItem({ item, index }) {
             </span>
           </div>
           <div className="text-xs text-gray-600 mt-1">
-            {item.arrivalTime} - {item.departureTime}
+            {formatDisplayTime(item.arrivalTime)} - {formatDisplayTime(item.departureTime)}
           </div>
         </div>
       </div>

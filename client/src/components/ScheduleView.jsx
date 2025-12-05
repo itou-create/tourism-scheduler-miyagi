@@ -1,6 +1,23 @@
 import Timeline from './Timeline';
 import { getElevation, getSlopeStars, getSlopeDescription } from '../services/plateauService';
 
+/**
+ * GTFSの24時を超える時刻を分かりやすく表示
+ * 例: "25:29" → "翌日 01:29"
+ */
+function formatDisplayTime(timeStr) {
+  if (!timeStr) return '';
+
+  const [hours, minutes] = timeStr.split(':').map(Number);
+
+  if (hours >= 24) {
+    const displayHours = hours % 24;
+    return `翌日 ${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  return timeStr;
+}
+
 function ScheduleView({ schedule }) {
   if (!schedule || !schedule.schedule) {
     return null;
@@ -28,11 +45,11 @@ function ScheduleView({ schedule }) {
           </div>
           <div>
             <span className="text-gray-600">開始:</span>
-            <span className="ml-2 font-semibold">{summary.startTime}</span>
+            <span className="ml-2 font-semibold">{formatDisplayTime(summary.startTime)}</span>
           </div>
           <div>
             <span className="text-gray-600">終了予定:</span>
-            <span className="ml-2 font-semibold">{summary.endTime}</span>
+            <span className="ml-2 font-semibold">{formatDisplayTime(summary.endTime)}</span>
           </div>
         </div>
       </div>
@@ -78,7 +95,7 @@ function ScheduleItem({ item, index }) {
             )}
             <div className="mt-2 flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
               <span className="text-gray-600">
-                🕐 {item.arrivalTime} - {item.departureTime}
+                🕐 {formatDisplayTime(item.arrivalTime)} - {formatDisplayTime(item.departureTime)}
               </span>
               <span className="text-gray-600">
                 ⏱️ {item.duration}分
@@ -167,7 +184,7 @@ function ScheduleItem({ item, index }) {
                 <div className="space-y-2">
                   {/* 出発 */}
                   <div className="flex items-start">
-                    <span className="font-bold text-blue-600 w-16">{item.departureTime}</span>
+                    <span className="font-bold text-blue-600 w-16">{formatDisplayTime(item.departureTime)}</span>
                     <div className="flex-1">
                       <span className="text-gray-700">🚶 {item.from.name || '現在地'}を出発</span>
                     </div>
@@ -184,7 +201,8 @@ function ScheduleItem({ item, index }) {
                           const arrivalMinutes = boardingMinutes - item.waitTime;
                           const arrH = Math.floor(arrivalMinutes / 60);
                           const arrM = arrivalMinutes % 60;
-                          return `${String(arrH).padStart(2, '0')}:${String(arrM).padStart(2, '0')}`;
+                          const timeStr = `${String(arrH).padStart(2, '0')}:${String(arrM).padStart(2, '0')}`;
+                          return formatDisplayTime(timeStr);
                         })()}</span>
                         <div className="flex-1">
                           <span className="text-gray-700">📍 <span className="font-medium text-orange-600">{item.route.fromStop.stop_name}</span>に到着</span>
@@ -198,7 +216,7 @@ function ScheduleItem({ item, index }) {
 
                       {/* バス乗車 */}
                       <div className="flex items-start bg-blue-50 p-2 rounded -ml-1">
-                        <span className="font-bold text-blue-600 w-16 pl-1">{item.boardingTime}</span>
+                        <span className="font-bold text-blue-600 w-16 pl-1">{formatDisplayTime(item.boardingTime)}</span>
                         <div className="flex-1">
                           <span className="text-blue-700 font-medium">
                             🚌 {item.routeName || 'バス'}に乗車
@@ -213,7 +231,7 @@ function ScheduleItem({ item, index }) {
                       {/* バス降車 */}
                       {item.alightingTime && (
                         <div className="flex items-start">
-                          <span className="font-bold text-blue-600 w-16">{item.alightingTime}</span>
+                          <span className="font-bold text-blue-600 w-16">{formatDisplayTime(item.alightingTime)}</span>
                           <div className="flex-1">
                             <span className="text-gray-700">🚏 <span className="font-medium text-green-600">{item.route.toStop.stop_name}</span>で降車</span>
                           </div>
@@ -224,7 +242,7 @@ function ScheduleItem({ item, index }) {
 
                   {/* 目的地到着 */}
                   <div className="flex items-start">
-                    <span className="font-bold text-green-600 w-16">{item.arrivalTime}</span>
+                    <span className="font-bold text-green-600 w-16">{formatDisplayTime(item.arrivalTime)}</span>
                     <div className="flex-1">
                       <span className="text-gray-700">🎯 {item.to.name || '目的地'}に到着</span>
                     </div>
