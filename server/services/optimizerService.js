@@ -88,11 +88,14 @@ class OptimizerService {
           let alightingTime = null;
 
           if (firstRoute.mode === 'transit' && firstRoute.departure) {
-            // バスの出発時刻（乗車時刻）
-            boardingTime = firstRoute.departure.departure_time;
+            // バスの出発時刻（乗車時刻）- 秒を削除してHH:MM形式に
+            const rawBoardingTime = firstRoute.departure.departure_time;
+            boardingTime = rawBoardingTime.substring(0, 5); // "HH:MM:SS" → "HH:MM"
+
             // バスの到着時刻（降車時刻）: GTFSの実データがあればそれを使用、なければ推定
             if (firstRoute.actualArrivalTime) {
-              alightingTime = firstRoute.actualArrivalTime;
+              // GTFSから取得した時刻も秒を削除
+              alightingTime = firstRoute.actualArrivalTime.substring(0, 5); // "HH:MM:SS" → "HH:MM"
             } else {
               const boardingMinutes = this.parseTime(boardingTime);
               alightingTime = this.formatTime(boardingMinutes + firstRoute.travelTime);
@@ -162,10 +165,12 @@ class OptimizerService {
             let firstBoardingTime = null;
             let firstAlightingTime = null;
             if (firstLeg.departure) {
-              firstBoardingTime = firstLeg.departure.departure_time;
+              // 秒を削除してHH:MM形式に
+              const rawFirstBoardingTime = firstLeg.departure.departure_time;
+              firstBoardingTime = rawFirstBoardingTime.substring(0, 5);
               // GTFSの実データがあればそれを使用、なければ推定
               if (firstLeg.actualArrivalTime) {
-                firstAlightingTime = firstLeg.actualArrivalTime;
+                firstAlightingTime = firstLeg.actualArrivalTime.substring(0, 5);
               } else {
                 const boardingMinutes = this.parseTime(firstBoardingTime);
                 firstAlightingTime = this.formatTime(boardingMinutes + firstLeg.travelTime);
@@ -201,10 +206,12 @@ class OptimizerService {
             let secondBoardingTime = null;
             let secondAlightingTime = null;
             if (secondLeg.departure) {
-              secondBoardingTime = secondLeg.departure.departure_time;
+              // 秒を削除してHH:MM形式に
+              const rawSecondBoardingTime = secondLeg.departure.departure_time;
+              secondBoardingTime = rawSecondBoardingTime.substring(0, 5);
               // GTFSの実データがあればそれを使用、なければ推定
               if (secondLeg.actualArrivalTime) {
-                secondAlightingTime = secondLeg.actualArrivalTime;
+                secondAlightingTime = secondLeg.actualArrivalTime.substring(0, 5);
               } else {
                 const boardingMinutes = this.parseTime(secondBoardingTime);
                 secondAlightingTime = this.formatTime(boardingMinutes + secondLeg.travelTime);
@@ -238,10 +245,12 @@ class OptimizerService {
             let alightingTime = null;
 
             if (route.mode === 'transit' && route.departure) {
-              boardingTime = route.departure.departure_time;
+              // 秒を削除してHH:MM形式に
+              const rawBoardingTime = route.departure.departure_time;
+              boardingTime = rawBoardingTime.substring(0, 5);
               // GTFSの実データがあればそれを使用、なければ推定
               if (route.actualArrivalTime) {
-                alightingTime = route.actualArrivalTime;
+                alightingTime = route.actualArrivalTime.substring(0, 5);
               } else {
                 const boardingMinutes = this.parseTime(boardingTime);
                 alightingTime = this.formatTime(boardingMinutes + route.travelTime);
@@ -300,10 +309,12 @@ class OptimizerService {
         let returnAlightingTime = null;
 
         if (returnRoute.mode === 'transit' && returnRoute.departure) {
-          returnBoardingTime = returnRoute.departure.departure_time;
+          // 秒を削除してHH:MM形式に
+          const rawReturnBoardingTime = returnRoute.departure.departure_time;
+          returnBoardingTime = rawReturnBoardingTime.substring(0, 5);
           // GTFSの実データがあればそれを使用、なければ推定
           if (returnRoute.actualArrivalTime) {
-            returnAlightingTime = returnRoute.actualArrivalTime;
+            returnAlightingTime = returnRoute.actualArrivalTime.substring(0, 5);
           } else {
             const boardingMinutes = this.parseTime(returnBoardingTime);
             returnAlightingTime = this.formatTime(boardingMinutes + returnRoute.travelTime);
