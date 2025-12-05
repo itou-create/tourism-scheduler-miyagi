@@ -382,9 +382,9 @@ class OptimizerService {
             for (const departure of nextDepartures) {
               const waitTime = this.calculateWaitTime(currentTime, departure.departure_time);
 
-              // GTFSから実際の到着時刻を取得
-              const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id);
-              console.log(`🔍 getArrivalTime(${departure.trip_id}, ${toStop.stop_id}) = ${actualArrivalTime}`);
+              // GTFSから実際の到着時刻を取得（出発停留所のstop_sequenceより後の停留所のみ）
+              const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id, departure.stop_sequence);
+              console.log(`🔍 getArrivalTime(${departure.trip_id}, ${toStop.stop_id}, seq>${departure.stop_sequence}) = ${actualArrivalTime}`);
 
               // 到着時刻がある場合は実データから移動時間を計算、なければ推定
               let travelTime;
@@ -528,8 +528,8 @@ class OptimizerService {
               for (const departure of nextDepartures) {
                 const waitTime = this.calculateWaitTime(currentTime, departure.departure_time);
 
-                // GTFSから実際の到着時刻を取得
-                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, hubStop.stop_id);
+                // GTFSから実際の到着時刻を取得（出発停留所のstop_sequenceより後の停留所のみ）
+                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, hubStop.stop_id, departure.stop_sequence);
 
                 // 到着時刻がある場合は実データから移動時間を計算、なければ推定
                 let travelTime;
@@ -587,8 +587,8 @@ class OptimizerService {
               for (const departure of nextDepartures) {
                 const waitTime = this.calculateWaitTime(transferTime, departure.departure_time);
 
-                // GTFSから実際の到着時刻を取得
-                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id);
+                // GTFSから実際の到着時刻を取得（出発停留所のstop_sequenceより後の停留所のみ）
+                const actualArrivalTime = await gtfsService.getArrivalTime(departure.trip_id, toStop.stop_id, departure.stop_sequence);
 
                 // 到着時刻がある場合は実データから移動時間を計算、なければ推定
                 let travelTime;

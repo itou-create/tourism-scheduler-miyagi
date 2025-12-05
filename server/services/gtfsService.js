@@ -311,9 +311,10 @@ class GtfsService {
    * 指定したtripの指定した停留所での実際の到着時刻を取得
    * @param {string} tripId - トリップID
    * @param {string} stopId - 停留所ID
+   * @param {number} fromStopSequence - 出発停留所のstop_sequence（これより後の停留所のみ対象）
    * @returns {Promise<string|null>} 到着時刻（HH:MM:SS形式）またはnull
    */
-  async getArrivalTime(tripId, stopId) {
+  async getArrivalTime(tripId, stopId, fromStopSequence = null) {
     if (this.useDummyData) {
       return null;
     }
@@ -327,8 +328,15 @@ class GtfsService {
       });
 
       if (stoptimes && stoptimes.length > 0) {
+        // fromStopSequenceが指定されている場合、それより後の停留所のみを対象にする
+        let targetStoptime = stoptimes[0];
+        if (fromStopSequence !== null && stoptimes.length > 1) {
+          // stop_sequenceがfromStopSequenceより大きい最初の停留所を探す
+          targetStoptime = stoptimes.find(st => st.stop_sequence > fromStopSequence) || stoptimes[0];
+        }
+
         // arrival_timeがあればそれを返す、なければdeparture_timeを返す
-        return stoptimes[0].arrival_time || stoptimes[0].departure_time;
+        return targetStoptime.arrival_time || targetStoptime.departure_time;
       }
 
       return null;
