@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LocationMapModal from './LocationMapModal';
 import { LOCATION_PRESETS, getPresetLocation } from '../data/locationPresets';
 
@@ -11,9 +11,9 @@ const THEMES = [
   { value: 'ファミリー', label: 'ファミリー向けコース' }
 ];
 
-function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
+function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange, selectedTheme, onThemeChange }) {
   const [formData, setFormData] = useState({
-    theme: '初めて訪れた人向け',
+    theme: selectedTheme || '初めて訪れた人向け',
     startTime: '09:00',
     visitDuration: 60,
     maxSpots: 5,
@@ -23,6 +23,16 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
   const [showMapModal, setShowMapModal] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
 
+  // 外部から渡されたselectedThemeが変更されたら、formDataを更新
+  useEffect(() => {
+    if (selectedTheme) {
+      setFormData(prev => ({
+        ...prev,
+        theme: selectedTheme
+      }));
+    }
+  }, [selectedTheme]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -31,6 +41,11 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange }) {
         ? parseInt(value)
         : value
     }));
+
+    // テーマが変更された場合、親コンポーネントにも通知
+    if (name === 'theme' && onThemeChange) {
+      onThemeChange(value);
+    }
   };
 
   const handleLocationChange = (field, value) => {

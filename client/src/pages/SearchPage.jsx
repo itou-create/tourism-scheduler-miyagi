@@ -12,6 +12,7 @@ function SearchPage() {
     lat: 38.2983,
     lon: 141.0606
   }); // デフォルト: 七ヶ浜町
+  const [selectedTheme, setSelectedTheme] = useState('初めて訪れた人向け');
 
   const handleGenerateSchedule = async (params) => {
     setLoading(true);
@@ -91,17 +92,30 @@ function SearchPage() {
         {/* 人気のコース紹介 */}
         <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: '🌊', title: '初めての方', desc: '定番スポットを巡る', color: 'from-blue-400 to-cyan-400' },
-            { icon: '🏛️', title: '歴史とカフェ', desc: '歴史とグルメを満喫', color: 'from-amber-400 to-orange-400' },
-            { icon: '🎨', title: 'アクティブ', desc: '体験型の観光', color: 'from-green-400 to-emerald-400' }
+            { icon: '🌊', title: '初めての方', desc: '定番スポットを巡る', color: 'from-blue-400 to-cyan-400', theme: '初めて訪れた人向け' },
+            { icon: '🏛️', title: '歴史とカフェ', desc: '歴史とグルメを満喫', color: 'from-amber-400 to-orange-400', theme: '歴史とカフェ' },
+            { icon: '🎨', title: 'アクティブ', desc: '体験型の観光', color: 'from-green-400 to-emerald-400', theme: 'アクティブ' }
           ].map((course, idx) => (
-            <div key={idx} className="group hover:scale-105 transition-transform duration-300">
-              <div className={`bg-gradient-to-br ${course.color} p-4 rounded-xl shadow-lg text-white`}>
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setSelectedTheme(course.theme)}
+              className="group hover:scale-105 transition-transform duration-300 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
+            >
+              <div className={`bg-gradient-to-br ${course.color} p-4 rounded-xl shadow-lg text-white ${selectedTheme === course.theme ? 'ring-4 ring-white ring-offset-2' : ''}`}>
                 <div className="text-3xl mb-2">{course.icon}</div>
                 <h3 className="font-bold text-lg mb-1">{course.title}</h3>
                 <p className="text-sm text-white/90">{course.desc}</p>
+                {selectedTheme === course.theme && (
+                  <div className="mt-2 flex items-center text-xs font-semibold">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    選択中
+                  </div>
+                )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -153,6 +167,8 @@ function SearchPage() {
                 loading={loading}
                 selectedLocation={selectedLocation}
                 onLocationChange={setSelectedLocation}
+                selectedTheme={selectedTheme}
+                onThemeChange={setSelectedTheme}
               />
             </div>
 
