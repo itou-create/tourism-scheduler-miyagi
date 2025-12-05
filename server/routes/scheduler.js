@@ -13,7 +13,9 @@ router.post('/generate', async (req, res) => {
     const {
       location,
       theme,
+      date,
       startTime,
+      returnTime,
       visitDuration,
       preferences,
       maxSpots
@@ -70,7 +72,9 @@ router.post('/generate', async (req, res) => {
     // スケジュールを生成（出発地情報を含める）
     const schedule = await optimizerService.generateSchedule({
       spots: selectedSpots,
+      date: date || null,  // 訪問日
       startTime,
+      returnTime: returnTime || null,  // 帰宅予定時刻
       visitDuration: visitDuration || 60,
       preferences: preferences || {},
       startLocation: {
@@ -79,6 +83,17 @@ router.post('/generate', async (req, res) => {
         name: '出発地点'
       }
     });
+
+    // レスポンスにdate情報を追加
+    if (date) {
+      const dateObj = new Date(date);
+      const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+      schedule.dateInfo = {
+        date,
+        dayOfWeek,
+        displayText: `${date} (${dayOfWeek}曜日)`
+      };
+    }
 
     res.json({
       success: true,

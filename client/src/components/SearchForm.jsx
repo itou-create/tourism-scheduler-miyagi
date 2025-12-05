@@ -12,9 +12,17 @@ const THEMES = [
 ];
 
 function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange, selectedTheme, onThemeChange }) {
+  // 今日の日付をデフォルトに設定
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // YYYY-MM-DD形式
+  };
+
   const [formData, setFormData] = useState({
     theme: selectedTheme || '初めて訪れた人向け',
+    date: getTodayDate(),
     startTime: '09:00',
+    returnTime: '18:00', // 帰宅予定時刻のデフォルトを18:00に
     visitDuration: 60,
     maxSpots: 5,
     scenicPriority: 3
@@ -182,18 +190,50 @@ function SearchForm({ onSubmit, loading, selectedLocation, onLocationChange, sel
           </select>
         </div>
 
-        {/* Start Time */}
+        {/* Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            出発時刻
+            訪問日
           </label>
           <input
-            type="time"
-            name="startTime"
-            value={formData.startTime}
+            type="date"
+            name="date"
+            value={formData.date}
             onChange={handleChange}
+            min={getTodayDate()}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            ※選択された日付に基づいて、平日便・土日祝便を自動判定します
+          </p>
+        </div>
+
+        {/* Time Range */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              出発時刻
+            </label>
+            <input
+              type="time"
+              name="startTime"
+              value={formData.startTime}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              帰宅予定時刻
+            </label>
+            <input
+              type="time"
+              name="returnTime"
+              value={formData.returnTime}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
         </div>
 
         {/* Visit Duration */}

@@ -1,4 +1,4 @@
-import { openDb, getRoutes, getStops, getStoptimes, getTrips } from 'gtfs';
+import { openDb, getRoutes, getStops, getStoptimes, getTrips, getCalendars, getCalendarDates } from 'gtfs';
 import { gtfsConfig } from '../utils/config.js';
 
 /**
@@ -335,6 +335,74 @@ class GtfsService {
     } catch (error) {
       console.error('Error fetching arrival time:', error);
       return null;
+    }
+  }
+
+  /**
+   * 指定された日付で運行されるservice_idを取得
+   * @param {string} dateString - 日付 (YYYY-MM-DD形式)
+   * @returns {Promise<Array<string>>} - その日に運行されるservice_idのリスト
+   */
+  async getServiceIdsForDate(dateString) {
+    try {
+      await this.initializeDb();
+
+      // YYYY-MM-DD を YYYYMMDD に変換
+      const dateNum = parseInt(dateString.replace(/-/g, ''));
+
+      // 日付から曜日を取得 (0=日曜, 1=月曜, ..., 6=土曜)
+      const date = new Date(dateString);
+      const dayOfWeek = date.getDay();
+
+      // 曜日をカレンダーのフィールド名にマッピング
+      const dayFields = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dayField = dayFields[dayOfWeek];
+
+      // カレンダー情報を取得
+      const calendars = await getCalendars();
+
+      // 通常運行のservice_idを取得
+      const regularServiceIds = calendars
+        .filter(cal => {
+          // 期間内かチェック
+          const inPeriod = cal.start_date <= dateNum && cal.end_date >= dateNum;
+          // その曜日に運行しているかチェック
+          const runsOnDay = cal[dayField] === 1;
+          return inPeriod && runsOnDay;
+        })
+        .map(cal => cal.service_id);
+
+      // 例外日情報を取得
+      const calendarDates = await getCalendarDates({
+        date: dateNum
+      });
+
+      // 例外日の処理
+      const serviceIds = new Set(regularServiceIds);
+
+      if (calendarDates && calendarDates.length > 0) {
+        calendarDates.forEach(exception => {
+          if (exception.exception_type === 1) {
+            // 1 = 追加運行
+            serviceIds.add(exception.service_id);
+          } else if (exception.exception_type === 2) {
+            // 2 = 運休
+            serviceIds.delete(exception.service_id);
+          }
+        });
+      }
+
+      const result = Array.from(serviceIds);
+
+      // ログ出力
+      console.log(`📅 ${dateString} (${['日', '月', '火', '水', '木', '金', '土'][dayOfWeek]}曜日) の運行service_id: ${result.length}件`);
+      console.log(`   service_ids: ${result.join(', ')}`);
+
+      return result;
+    } catch (error) {
+      console.error('Error getting service IDs for date:', error);
+      // エラー時は全てのservice_idを返す（後方互換性のため）
+      return [];
     }
   }
 
