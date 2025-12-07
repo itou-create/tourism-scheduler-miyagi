@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173'
+  origin: [
+    'http://localhost:5173',  // 開発環境
+    'https://itou-create.github.io'  // 本番環境（GitHub Pages）
+  ]
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
