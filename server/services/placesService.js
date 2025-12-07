@@ -693,6 +693,146 @@ class PlacesService {
         vicinity: '塩釜市本町8-1',
         theme: '文化'
       },
+      {
+        id: 'shiogama_7',
+        name: '志波彦神社',
+        lat: 38.3150,
+        lon: 141.0205,
+        rating: 4.5,
+        types: ['place_of_worship', 'tourist_attraction'],
+        vicinity: '塩釜市一森山1-1',
+        theme: '歴史'
+      },
+      {
+        id: 'shiogama_8',
+        name: '塩釜港',
+        lat: 38.3110,
+        lon: 141.0280,
+        rating: 4.2,
+        types: ['tourist_attraction'],
+        vicinity: '塩釜市港町',
+        theme: '自然'
+      },
+      {
+        id: 'shiogama_9',
+        name: '塩釜市公民館',
+        lat: 38.3145,
+        lon: 141.0215,
+        rating: 3.8,
+        types: ['community_center'],
+        vicinity: '塩釜市東玉川町9-1',
+        theme: '文化'
+      },
+      {
+        id: 'shiogama_10',
+        name: '塩釜神社博物館',
+        lat: 38.3148,
+        lon: 141.0210,
+        rating: 4.0,
+        types: ['museum'],
+        vicinity: '塩釜市一森山1-1',
+        theme: '文化'
+      },
+      {
+        id: 'shiogama_11',
+        name: '御殿坂（表坂）',
+        lat: 38.3147,
+        lon: 141.0212,
+        rating: 4.3,
+        types: ['tourist_attraction'],
+        vicinity: '塩釜市一森山',
+        theme: '歴史'
+      },
+      {
+        id: 'shiogama_12',
+        name: '塩釜港旅客ターミナル（遊覧船乗り場）',
+        lat: 38.3128,
+        lon: 141.0265,
+        rating: 4.1,
+        types: ['tourist_attraction'],
+        vicinity: '塩釜市港町1-4-1',
+        theme: '自然'
+      },
+      {
+        id: 'shiogama_13',
+        name: '亀井邸（鹽竈桜）',
+        lat: 38.3160,
+        lon: 141.0200,
+        rating: 4.0,
+        types: ['tourist_attraction', 'park'],
+        vicinity: '塩釜市宮町',
+        theme: '自然'
+      },
+      {
+        id: 'shiogama_14',
+        name: '塩釜神社表参道',
+        lat: 38.3145,
+        lon: 141.0215,
+        rating: 4.2,
+        types: ['tourist_attraction'],
+        vicinity: '塩釜市一森山',
+        theme: '歴史'
+      },
+      {
+        id: 'shiogama_15',
+        name: 'すし街道',
+        lat: 38.3135,
+        lon: 141.0240,
+        rating: 4.4,
+        types: ['food', 'tourist_attraction'],
+        vicinity: '塩釜市海岸通',
+        theme: 'グルメ'
+      },
+      {
+        id: 'shiogama_16',
+        name: '海岸通り商店街',
+        lat: 38.3130,
+        lon: 141.0250,
+        rating: 4.0,
+        types: ['shopping', 'tourist_attraction'],
+        vicinity: '塩釜市海岸通',
+        theme: 'ショッピング'
+      },
+      {
+        id: 'shiogama_17',
+        name: '塩竈市観光物産案内所',
+        lat: 38.3170,
+        lon: 141.0200,
+        rating: 3.8,
+        types: ['tourist_information'],
+        vicinity: '塩釜市本町1-1',
+        theme: '文化'
+      },
+      {
+        id: 'shiogama_18',
+        name: '七曲坂',
+        lat: 38.3149,
+        lon: 141.0208,
+        rating: 3.9,
+        types: ['tourist_attraction'],
+        vicinity: '塩釜市一森山',
+        theme: '歴史'
+      },
+      {
+        id: 'shiogama_19',
+        name: '本塩釜駅',
+        lat: 38.3171,
+        lon: 141.0230,
+        rating: 3.7,
+        types: ['transit_station'],
+        vicinity: '塩釜市錦町',
+        theme: '文化'
+      },
+      {
+        id: 'shiogama_20',
+        name: '塩釜みなと祭会場',
+        lat: 38.3115,
+        lon: 141.0275,
+        rating: 4.3,
+        types: ['event_venue', 'tourist_attraction'],
+        vicinity: '塩釜市港町',
+        theme: '文化'
+      },
 
       // 松島周辺（七ヶ浜の近く）
       {

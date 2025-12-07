@@ -194,7 +194,7 @@ class GtfsService {
   }
 
   /**
-   * 2つの停留所間のルートを検索
+   * 2つの停留所間のルートを検索（正しい方向のみ）
    */
   async findRoutesBetweenStops(fromStopId, toStopId) {
     if (this.useDummyData) {
@@ -216,24 +216,58 @@ class GtfsService {
       // 到着停留所を通るトリップを取得
       const toStoptimes = await getStoptimes({ stop_id: toStopId });
 
-      // 両方の停留所を通るトリップを見つける
-      const fromTripIds = new Set(fromStoptimes.map(st => st.trip_id));
-      const commonTrips = toStoptimes.filter(st => fromTripIds.has(st.trip_id));
+      // trip_idとstop_sequenceのマップを作成
+      const fromStopMap = {};
+      fromStoptimes.forEach(st => {
+        if (!fromStopMap[st.trip_id]) {
+          fromStopMap[st.trip_id] = [];
+        }
+        fromStopMap[st.trip_id].push(st.stop_sequence);
+      });
 
-      // トリップからルート情報を取得
-      const routes = [];
-      for (const stoptime of commonTrips) {
-        const trips = await getTrips({ trip_id: stoptime.trip_id });
-        if (trips && trips.length > 0) {
-          routes.push({
-            trip_id: stoptime.trip_id,
-            route_id: trips[0].route_id,
-            stop_id: toStopId
-          });
+      const toStopMap = {};
+      toStoptimes.forEach(st => {
+        if (!toStopMap[st.trip_id]) {
+          toStopMap[st.trip_id] = [];
+        }
+        toStopMap[st.trip_id].push(st.stop_sequence);
+      });
+
+      // 両方の停留所を通り、かつfrom < toの順序になっているトリップを見つける
+      const validRoutes = [];
+      for (const tripId of Object.keys(fromStopMap)) {
+        if (toStopMap[tripId]) {
+          // このトリップが両方の停留所を通る
+          const fromSequences = fromStopMap[tripId];
+          const toSequences = toStopMap[tripId];
+
+          // fromのいずれかのstop_sequence < toのいずれかのstop_sequenceであることを確認
+          let hasValidDirection = false;
+          for (const fromSeq of fromSequences) {
+            for (const toSeq of toSequences) {
+              if (fromSeq < toSeq) {
+                hasValidDirection = true;
+                break;
+              }
+            }
+            if (hasValidDirection) break;
+          }
+
+          if (hasValidDirection) {
+            const trips = await getTrips({ trip_id: tripId });
+            if (trips && trips.length > 0) {
+              validRoutes.push({
+                trip_id: tripId,
+                route_id: trips[0].route_id,
+                stop_id: toStopId
+              });
+            }
+          }
         }
       }
 
-      return routes;
+      console.log(`🔍 findRoutesBetweenStops: ${fromStopId} → ${toStopId}: Found ${validRoutes.length} valid routes (correct direction only)`);
+      return validRoutes;
     } catch (error) {
       console.error('Error finding routes between stops:', error);
       return [];

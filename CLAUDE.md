@@ -119,6 +119,7 @@ client/src/
 ### 周遊スケジュール最適化ロジック（optimizerService.js）
 - **アルゴリズム**: 貪欲法（Greedy Algorithm）
 - **目的**: 待ち時間と移動時間の合計を最小化
+- **到達可能時間制限**: 出発地から2時間以内に到達可能なスポットのみを候補とする
 - **処理フロー**:
   1. 各観光スポットの近隣停留所を検索（0.5km以内）
   2. 停留所間の接続ルートを確認
@@ -146,7 +147,10 @@ client/src/
 - **近隣停留所検索**: Haversine公式で距離計算（`server/services/gtfsService.js:290-309`）
 - **デフォルト検索半径**: 0.5km（徒歩圏内）
 - **ルート検索**: 2つの停留所間で共通の`route_id`を持つバス便を検索
+  - **方向検証**: `stop_sequence`を使用して、fromStop < toStop の順序で通過するトリップのみを選択
+  - 往路・復路の混同を防止（`findRoutesBetweenStops`メソッド）
 - **出発便取得**: `getNextDepartures()`で指定時刻以降の便を時系列順に取得
+- **移動時間計算**: `getTravelTimeForTrip()`でGTFSの実際の時刻データから正確な移動時間を取得
 
 ## 重要な設定
 
@@ -160,10 +164,13 @@ GTFS_DB_PATH=./gtfs_data              # GTFSデータベース保存先
 CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
 ```
 
-### デフォルト設定（宮城県仙台市）
+### デフォルト設定（宮城県仙台市・塩釜市・七ヶ浜町）
 - **地図中心**: 仙台駅（緯度 38.2606, 経度 140.8817）- `client/src/App.jsx:11-14`
-- **ダミー観光スポット**: 仙台城跡、勾当台公園、仙台朝市など - `server/services/placesService.js:120-205`
-- **ダミー停留所**: 仙台駅前、青葉通一番町など - `server/services/gtfsService.js:83-91`
+- **観光スポット**:
+  - 仙台市エリア: 仙台城跡、勾当台公園、仙台朝市など
+  - 塩釜市エリア: 鹽竈神社、志波彦神社、マリンゲート塩釜、塩釜水産物仲卸市場など（10件）
+  - 七ヶ浜町エリア: 七ヶ浜国際村、菖蒲田浜海水浴場など
+  - すべて `server/services/placesService.js` で定義
 
 ### GTFS統合モード
 現在は**実データモード**で動作（`gtfsService.js:11 useDummyData = false`）
@@ -224,9 +231,19 @@ CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
 
 ## 開発時の注意事項
 
+### Claude設定（Windows）
+
+**重要**: 開発サーバーを再起動するときの注意点
+
+- `taskkill /F /IM node.exe` や `powershell Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force` など、**すべてのnodeプロセスを終了するコマンドは実行しないでください**
+- 他の重要なNodeプロセス（IDE、開発ツール等）を誤って終了させる可能性があります
+- サーバーを停止したい場合は、手順を説明するだけにしてください
+  - 例: 「サーバーを起動しているターミナルで Ctrl+C を押してください」
+- サーバー起動は `npm start` または `npm run dev` だけを実行してください
+
 ### サーバーポート競合
 - ポート3001が既に使用されている場合、`.env`の`PORT`を変更
-- Windowsでは `taskkill /F /IM node.exe` でNode.jsプロセスを強制終了可能
+- サーバーを停止する場合は、実行中のターミナルで `Ctrl+C` を押してください
 
 ### 地図表示トラブル
 - Leaflet CSSが`index.html`で正しく読み込まれているか確認
@@ -238,6 +255,9 @@ CORS_ORIGIN=http://localhost:5173     # CORS許可オリジン
 
 ### データ更新
 - 観光スポットやGTFSデータを変更した場合、サーバー再起動が必要
+- **重要**: `optimizerService.js`や`gtfsService.js`を変更した場合は、サーバーを完全に再起動してください
+  - 実行中のサーバーのターミナルで `Ctrl+C` を押して停止
+  - `npm start` または `npm run dev` で再起動
 - GTFSデータ再インポート:
   ```bash
   cd server

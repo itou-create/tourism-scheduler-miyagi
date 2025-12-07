@@ -53,13 +53,13 @@ class OptimizerService {
       throw new Error('No spots provided');
     }
 
-    // 1時間以内に到達可能なスポットのみにフィルタリング
+    // 2時間以内に到達可能なスポットのみにフィルタリング
     let filteredSpots = spots;
     if (startLocation) {
-      filteredSpots = await this.filterReachableSpots(spots, startLocation, startTime, 60);
+      filteredSpots = await this.filterReachableSpots(spots, startLocation, startTime, 120);
 
       if (filteredSpots.length === 0) {
-        throw new Error('No reachable spots found within 1 hour from start location');
+        throw new Error('No reachable spots found within 2 hours from start location');
       }
     }
 
