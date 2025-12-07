@@ -74,12 +74,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
 
-  // 仙台市オープンデータを初期化
+  // 仙台市オープンデータをバックグラウンドで初期化
   console.log('\n🔄 仙台市オープンデータを初期化中...');
-  await sendaiOpenDataService.initialize();
-  console.log('✅ サーバーの初期化が完了しました\n');
+  sendaiOpenDataService.initialize()
+    .then(() => {
+      console.log('✅ サーバーの初期化が完了しました\n');
+    })
+    .catch((error) => {
+      console.error('⚠️  オープンデータの初期化に失敗しました:', error);
+      console.log('⚠️  サーバーは起動していますが、一部機能が制限される可能性があります\n');
+    });
 });
