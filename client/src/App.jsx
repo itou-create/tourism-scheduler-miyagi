@@ -128,7 +128,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router basename="/tourism-scheduler-miyagi">
       <div className="h-screen flex flex-col bg-gray-50">
         <Header />
         <Routes>
