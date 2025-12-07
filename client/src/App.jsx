@@ -14,13 +14,23 @@ function App() {
   useEffect(() => {
     let retryTimer;
     let isMounted = true;
+    const startTime = Date.now();
 
     const checkBackendHealth = async () => {
       try {
         await healthCheck();
+
         if (isMounted) {
-          setIsBackendReady(true);
-          setErrorMessage('');
+          // 最小800msのローディング表示時間を確保
+          const elapsedTime = Date.now() - startTime;
+          const remainingTime = Math.max(0, 800 - elapsedTime);
+
+          setTimeout(() => {
+            if (isMounted) {
+              setIsBackendReady(true);
+              setErrorMessage('');
+            }
+          }, remainingTime);
         }
       } catch (error) {
         if (isMounted) {
