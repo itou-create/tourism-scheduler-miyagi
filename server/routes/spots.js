@@ -23,12 +23,19 @@ router.get('/search', async (req, res) => {
       });
     }
 
+    console.log(`🔍 /api/spots/search - lat: ${lat}, lon: ${lon}, theme: ${theme}, radius: ${radius}`);
+
     const spots = await placesService.searchSpotsByTheme(
       parseFloat(lat),
       parseFloat(lon),
       theme,
       parseInt(radius) || 5000
     );
+
+    console.log(`✅ Found ${spots.length} spots for theme: ${theme}`);
+    if (spots.length > 0) {
+      console.log(`  Sample spots: ${spots.slice(0, 3).map(s => `${s.name} (${s.theme})`).join(', ')}`);
+    }
 
     res.json({
       success: true,

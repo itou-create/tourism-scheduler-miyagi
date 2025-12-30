@@ -73,6 +73,8 @@ class PlacesService {
 
     // まず仙台市オープンデータから検索
     if (sendaiOpenDataService.isDataLoaded()) {
+      console.log(`✅ sendaiOpenDataService has ${sendaiOpenDataService.getAllSpots().length} spots loaded`);
+
       // コース別の処理
       const courseConfig = this.getCourseThemes(theme);
       console.log(`📋 courseConfig:`, courseConfig ? `Found for "${theme}"` : `Not found for "${theme}"`);
@@ -126,7 +128,9 @@ class PlacesService {
         openDataSpots = mixed;
       } else {
         // 従来の単一テーマの処理
+        console.log(`📋 Single theme search: "${theme}"`);
         openDataSpots = sendaiOpenDataService.getSpotsByTheme(theme);
+        console.log(`📊 Found ${openDataSpots.length} spots with theme "${theme}" before location filtering`);
 
         // 位置情報でフィルタリング（radiusをkmに変換）
         const radiusKm = radius / 1000;
@@ -136,11 +140,14 @@ class PlacesService {
           // 最大半径以内のスポットのみ（出発地と完全に同じ場所も含める）
           return distance <= radiusKm;
         });
+        console.log(`📊 After location filtering (radius ${radiusKm}km): ${openDataSpots.length} spots`);
       }
 
       if (openDataSpots.length > 0) {
         console.log(`✅ 仙台市オープンデータから${openDataSpots.length}件のスポットを取得`);
         return openDataSpots;
+      } else {
+        console.log(`⚠️  No spots found for theme "${theme}" within radius ${radius}m`);
       }
     }
 
