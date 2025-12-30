@@ -88,13 +88,12 @@ class PlacesService {
 
         // 位置情報とコースのフィルタでフィルタリング
         const radiusKm = radius / 1000;
-        const minDistanceKm = 0.1;
 
         openDataSpots = allSpots.filter(spot => {
           if (!spot.lat || !spot.lon) return false;
 
           const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
-          if (distance < minDistanceKm || distance > radiusKm) return false;
+          if (distance > radiusKm) return false;
 
           // コース固有のフィルタを適用
           if (courseConfig.filterFunc) {
@@ -131,12 +130,11 @@ class PlacesService {
 
         // 位置情報でフィルタリング（radiusをkmに変換）
         const radiusKm = radius / 1000;
-        const minDistanceKm = 0.1; // 最小距離100m（出発地と同じ場所のスポットを除外）
         openDataSpots = openDataSpots.filter(spot => {
           if (!spot.lat || !spot.lon) return false;
           const distance = this.calculateDistance(lat, lon, spot.lat, spot.lon);
-          // 最小距離以上、最大半径以内のスポットのみ
-          return distance >= minDistanceKm && distance <= radiusKm;
+          // 最大半径以内のスポットのみ（出発地と完全に同じ場所も含める）
+          return distance <= radiusKm;
         });
       }
 
