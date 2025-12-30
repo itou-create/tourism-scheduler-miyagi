@@ -13,8 +13,7 @@ export const config = {
   googlePlacesApiKey: process.env.GOOGLE_PLACES_API_KEY,
   gtfsDataUrl: process.env.GTFS_DATA_URL,
   gtfsDbPath: process.env.GTFS_DB_PATH || './gtfs_data',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  databaseUrl: process.env.DATABASE_URL
+  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173'
 };
 
 export const gtfsConfig = {
@@ -28,18 +27,7 @@ export const gtfsConfig = {
       path: join(__dirname, '../gtfs_data/shichigahama_gururinko.zip')
     }
   ],
-  // PostgreSQLを使用する場合はDATABASE_URL、それ以外はSQLiteを使用
-  ...(config.databaseUrl
-    ? {
-        db: {
-          client: 'pg',
-          connection: config.databaseUrl
-        }
-      }
-    : {
-        sqlitePath: join(__dirname, '../gtfs_data/gtfs.db')
-      }
-  ),
+  sqlitePath: join(__dirname, '../gtfs_data/gtfs.db'),
   verbose: config.nodeEnv === 'development',
   ignoreDuplicates: true
 };

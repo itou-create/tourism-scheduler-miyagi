@@ -1,10 +1,3 @@
-databases:
-  - name: tourism-scheduler-db
-    plan: free
-    databaseName: tourism_scheduler
-    user: tourism_user
-    region: oregon
-
 services:
   - type: web
     name: tourism-scheduler-miyagi
@@ -20,9 +13,5 @@ services:
         value: 10000
       - key: CORS_ORIGIN
         value: '*'
-      - key: DATABASE_URL
-        fromDatabase:
-          name: tourism-scheduler-db
-          property: connectionString
     healthCheckPath: /api/health
     autoDeploy: true
