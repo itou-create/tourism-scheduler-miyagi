@@ -1,17 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import schedulerRoutes from './routes/scheduler.js';
 import gtfsRoutes from './routes/gtfs.js';
 import spotsRoutes from './routes/spots.js';
 import sendaiOpenDataService from './services/sendaiOpenDataService.js';
 
 dotenv.config({ path: '../.env' });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,35 +31,39 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Tourism Scheduler API is running' });
 });
 
-// 静的ファイル配信（本番環境）
-if (process.env.NODE_ENV === 'production') {
-  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
-  app.use(express.static(clientDistPath));
-
-  // SPAのフォールバック処理（API以外のルートはindex.htmlを返す）
-  app.get('*', (req, res) => {
-    // APIルートは除外
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({
-        error: {
-          message: 'API route not found',
-          status: 404
-        }
-      });
-    }
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
-} else {
-  // 開発環境では404を返す
-  app.use((req, res) => {
-    res.status(404).json({
-      error: {
-        message: 'Route not found',
-        status: 404
+// ルートパスの説明
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Tourism Scheduler API',
+    version: '1.0.0',
+    description: '宮城県観光周遊スケジュール自動生成API',
+    frontend: 'https://itou-create.github.io/tourism-scheduler-miyagi',
+    endpoints: {
+      health: '/api/health',
+      scheduler: {
+        generate: 'POST /api/scheduler/generate'
+      },
+      spots: {
+        search: 'GET /api/spots/search?lat=<lat>&lon=<lon>&theme=<theme>&radius=<radius>'
+      },
+      gtfs: {
+        nearbyStops: 'GET /api/gtfs/stops/nearby?lat=<lat>&lon=<lon>&radius=<radius>'
       }
-    });
+    },
+    documentation: 'https://github.com/itou-create/tourism-scheduler-miyagi'
   });
-}
+});
+
+// 404ハンドラー（API以外のルート）
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      message: 'Route not found',
+      status: 404,
+      path: req.path
+    }
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
