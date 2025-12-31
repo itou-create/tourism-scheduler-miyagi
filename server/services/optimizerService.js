@@ -294,12 +294,14 @@ class OptimizerService {
         // 帰路のバス乗車時刻・降車時刻をスケジュール上の時刻として計算
         let returnBoardingTime = null;
         let returnAlightingTime = null;
+        const walkToStopTime = returnRoute.walkToStopTime || 0;
+        const walkFromStopTime = returnRoute.walkFromStopTime || 0;
 
         if (returnRoute.mode === 'transit' && returnRoute.departure) {
-          // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
-          returnBoardingTime = this.formatTime(currentTime + returnRoute.waitTime);
+          // スケジュール上の乗車時刻 = 現在時刻 + バス停までの徒歩時間 + 待ち時間
+          returnBoardingTime = this.formatTime(currentTime + walkToStopTime + returnRoute.waitTime);
           // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
-          returnAlightingTime = this.formatTime(currentTime + returnRoute.waitTime + returnRoute.travelTime);
+          returnAlightingTime = this.formatTime(currentTime + walkToStopTime + returnRoute.waitTime + returnRoute.travelTime);
         }
 
         schedule.push({
@@ -308,12 +310,14 @@ class OptimizerService {
           to: startLocation,
           route: returnRoute,
           departureTime: this.formatTime(currentTime),
-          arrivalTime: this.formatTime(currentTime + returnRoute.waitTime + returnRoute.travelTime),
+          arrivalTime: this.formatTime(currentTime + walkToStopTime + returnRoute.waitTime + returnRoute.travelTime + walkFromStopTime),
           boardingTime: returnBoardingTime,  // バス停での乗車時刻
           alightingTime: returnAlightingTime, // バス停での降車時刻
+          walkToStopTime: walkToStopTime, // 出発地からバス停までの徒歩時間
           waitTime: returnRoute.waitTime,
           travelTime: returnRoute.travelTime,
-          totalTime: returnRoute.waitTime + returnRoute.travelTime,
+          walkFromStopTime: walkFromStopTime, // バス停から出発地までの徒歩時間
+          totalTime: walkToStopTime + returnRoute.waitTime + returnRoute.travelTime + walkFromStopTime,
           mode: returnRoute.mode,
           routeName: returnRoute.routeName || null,
           routeNumber: returnRoute.routeNumber || null,
@@ -321,7 +325,7 @@ class OptimizerService {
           isReturn: true  // 帰路フラグ
         });
 
-        currentTime += returnRoute.waitTime + returnRoute.travelTime;
+        currentTime += walkToStopTime + returnRoute.waitTime + returnRoute.travelTime + walkFromStopTime;
       }
     }
 
