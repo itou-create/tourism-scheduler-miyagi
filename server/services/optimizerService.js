@@ -485,19 +485,25 @@ class OptimizerService {
         const walkingRoute = this.createWalkingRoute(from, to, currentTime);
         console.log(`🚶 Walking option: ${walkingRoute.travelTime}min`);
 
-        // 徒歩が30分以内で、バスの待ち時間+移動時間が徒歩より長い場合は徒歩を選択
-        if (walkingRoute.travelTime <= 30 && transitTotalTime > walkingRoute.travelTime) {
-          console.log(`✅ Walking is faster, using walking route`);
+        // 徒歩が15分以内で、バスが徒歩の1.5倍以上かかる場合は徒歩を選択
+        if (walkingRoute.travelTime <= 15 && transitTotalTime >= walkingRoute.travelTime * 1.5) {
+          console.log(`✅ Walking is much faster (walk: ${walkingRoute.travelTime}min vs transit: ${transitTotalTime}min), using walking route`);
           return walkingRoute;
         }
 
-        // バスの待ち時間が20分以上で、徒歩が40分以内なら徒歩を選択
-        if (bestRoute.waitTime >= 20 && walkingRoute.travelTime <= 40) {
-          console.log(`✅ Bus wait time too long, using walking route`);
+        // 徒歩が20分以内で、バスが徒歩の2倍以上かかる場合は徒歩を選択
+        if (walkingRoute.travelTime <= 20 && transitTotalTime >= walkingRoute.travelTime * 2) {
+          console.log(`✅ Walking is significantly faster, using walking route`);
           return walkingRoute;
         }
 
-        console.log(`✅ Using transit (more efficient than walking)`);
+        // バスの待ち時間が30分以上で、徒歩が40分以内なら徒歩を選択
+        if (bestRoute.waitTime >= 30 && walkingRoute.travelTime <= 40) {
+          console.log(`✅ Bus wait time too long (${bestRoute.waitTime}min), using walking route`);
+          return walkingRoute;
+        }
+
+        console.log(`✅ Using transit (total: ${transitTotalTime}min vs walk: ${walkingRoute.travelTime}min)`);
         return bestRoute;
       }
 
@@ -516,19 +522,25 @@ class OptimizerService {
         console.log(`🚌 Transfer route option: ${transferTotalTime}min (walkTo: ${walkToStopTime}min, wait: ${transferRoute.waitTime}min, travel: ${transferRoute.travelTime}min, walkFrom: ${walkFromStopTime}min)`);
 
         // 徒歩 vs バス乗り換えの比較
-        // 徒歩が30分以内で、バス乗り換えが徒歩の1.5倍以上かかる場合は徒歩を選択
-        if (walkingRoute.travelTime <= 30 && transferTotalTime >= walkingRoute.travelTime * 1.5) {
-          console.log(`✅ Walking is more efficient, using walking route`);
+        // 徒歩が15分以内で、バス乗り換えが徒歩の2倍以上かかる場合は徒歩を選択
+        if (walkingRoute.travelTime <= 15 && transferTotalTime >= walkingRoute.travelTime * 2) {
+          console.log(`✅ Walking is much faster (walk: ${walkingRoute.travelTime}min vs transfer: ${transferTotalTime}min), using walking route`);
           return walkingRoute;
         }
 
-        // バス乗り換えが60分以上かかる場合は徒歩を選択（徒歩が40分以内の場合）
-        if (transferTotalTime >= 60 && walkingRoute.travelTime <= 40) {
-          console.log(`✅ Transfer takes too long, using walking route`);
+        // 徒歩が25分以内で、バス乗り換えが徒歩の2.5倍以上かかる場合は徒歩を選択
+        if (walkingRoute.travelTime <= 25 && transferTotalTime >= walkingRoute.travelTime * 2.5) {
+          console.log(`✅ Walking is significantly faster, using walking route`);
           return walkingRoute;
         }
 
-        console.log(`✅ Using transfer route (more efficient than walking)`);
+        // バス乗り換えが90分以上かかる場合は徒歩を選択（徒歩が45分以内の場合）
+        if (transferTotalTime >= 90 && walkingRoute.travelTime <= 45) {
+          console.log(`✅ Transfer takes too long (${transferTotalTime}min), using walking route`);
+          return walkingRoute;
+        }
+
+        console.log(`✅ Using transfer route (total: ${transferTotalTime}min vs walk: ${walkingRoute.travelTime}min)`);
         return transferRoute;
       }
 
