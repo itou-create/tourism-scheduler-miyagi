@@ -86,13 +86,14 @@ class OptimizerService {
           // バスの場合、乗車時刻・降車時刻をスケジュール上の時刻として計算
           let boardingTime = null;
           let alightingTime = null;
+          const walkToStopTime = firstRoute.walkToStopTime || 0;
           const walkFromStopTime = firstRoute.walkFromStopTime || 0;
 
           if (firstRoute.mode === 'transit' && firstRoute.departure) {
-            // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
-            boardingTime = this.formatTime(currentTime + firstRoute.waitTime);
+            // スケジュール上の乗車時刻 = 現在時刻 + バス停までの徒歩時間 + 待ち時間
+            boardingTime = this.formatTime(currentTime + walkToStopTime + firstRoute.waitTime);
             // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
-            alightingTime = this.formatTime(currentTime + firstRoute.waitTime + firstRoute.travelTime);
+            alightingTime = this.formatTime(currentTime + walkToStopTime + firstRoute.waitTime + firstRoute.travelTime);
           }
 
           // 出発地からの移動を追加
@@ -102,13 +103,14 @@ class OptimizerService {
             to: spot,
             route: firstRoute,
             departureTime: this.formatTime(currentTime),
-            arrivalTime: this.formatTime(currentTime + firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime),
+            arrivalTime: this.formatTime(currentTime + walkToStopTime + firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime),
             boardingTime: boardingTime,  // バス停での乗車時刻
             alightingTime: alightingTime, // バス停での降車時刻
+            walkToStopTime: walkToStopTime, // 出発地からバス停までの徒歩時間
             waitTime: firstRoute.waitTime,
             travelTime: firstRoute.travelTime,
             walkFromStopTime: walkFromStopTime, // バス停からスポットまでの徒歩時間
-            totalTime: firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime,
+            totalTime: walkToStopTime + firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime,
             mode: firstRoute.mode,
             routeName: firstRoute.routeName || null,
             routeNumber: firstRoute.routeNumber || null,
@@ -116,7 +118,7 @@ class OptimizerService {
             isFirstTransit: true  // 最初の移動フラグ
           });
 
-          currentTime += firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime;
+          currentTime += walkToStopTime + firstRoute.waitTime + firstRoute.travelTime + walkFromStopTime;
         }
 
         // 最初のスポット訪問
@@ -154,15 +156,16 @@ class OptimizerService {
           if (route.isTransfer) {
             const firstLeg = route.firstLeg;
             const secondLeg = route.secondLeg;
+            const walkToStopTime = route.walkToStopTime || 0;
 
             // 第1区間の乗車時刻・降車時刻（スケジュール上の時刻）
             let firstBoardingTime = null;
             let firstAlightingTime = null;
             if (firstLeg.departure) {
-              // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
-              firstBoardingTime = this.formatTime(currentTime + firstLeg.waitTime);
+              // スケジュール上の乗車時刻 = 現在時刻 + バス停までの徒歩時間 + 待ち時間
+              firstBoardingTime = this.formatTime(currentTime + walkToStopTime + firstLeg.waitTime);
               // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
-              firstAlightingTime = this.formatTime(currentTime + firstLeg.waitTime + firstLeg.travelTime);
+              firstAlightingTime = this.formatTime(currentTime + walkToStopTime + firstLeg.waitTime + firstLeg.travelTime);
             }
 
             // 第1区間: 出発地 → 乗り換えハブ
@@ -172,12 +175,13 @@ class OptimizerService {
               to: { ...route.transferHub, name: firstLeg.toStop.stop_name },
               route: firstLeg,
               departureTime: this.formatTime(currentTime),
-              arrivalTime: this.formatTime(currentTime + firstLeg.waitTime + firstLeg.travelTime),
+              arrivalTime: this.formatTime(currentTime + walkToStopTime + firstLeg.waitTime + firstLeg.travelTime),
               boardingTime: firstBoardingTime,
               alightingTime: firstAlightingTime,
+              walkToStopTime: walkToStopTime, // 出発地からバス停までの徒歩時間
               waitTime: firstLeg.waitTime,
               travelTime: firstLeg.travelTime,
-              totalTime: firstLeg.waitTime + firstLeg.travelTime,
+              totalTime: walkToStopTime + firstLeg.waitTime + firstLeg.travelTime,
               mode: 'transit',
               routeName: firstLeg.routeName || null,
               routeNumber: firstLeg.routeNumber || null,
@@ -185,7 +189,7 @@ class OptimizerService {
               isTransferLeg: 1
             });
 
-            currentTime += firstLeg.waitTime + firstLeg.travelTime;
+            currentTime += walkToStopTime + firstLeg.waitTime + firstLeg.travelTime;
 
             // 乗り換え待ち時間（5分）
             currentTime += 5;
@@ -228,13 +232,14 @@ class OptimizerService {
             // バスの場合、乗車時刻・降車時刻をスケジュール上の時刻として計算
             let boardingTime = null;
             let alightingTime = null;
+            const walkToStopTime = route.walkToStopTime || 0;
             const walkFromStopTime = route.walkFromStopTime || 0;
 
             if (route.mode === 'transit' && route.departure) {
-              // スケジュール上の乗車時刻 = 現在時刻 + 待ち時間
-              boardingTime = this.formatTime(currentTime + route.waitTime);
+              // スケジュール上の乗車時刻 = 現在時刻 + バス停までの徒歩時間 + 待ち時間
+              boardingTime = this.formatTime(currentTime + walkToStopTime + route.waitTime);
               // スケジュール上の降車時刻 = 乗車時刻 + 移動時間
-              alightingTime = this.formatTime(currentTime + route.waitTime + route.travelTime);
+              alightingTime = this.formatTime(currentTime + walkToStopTime + route.waitTime + route.travelTime);
             }
 
             // 通常の直接ルート
@@ -244,20 +249,21 @@ class OptimizerService {
               to: spot,
               route: route,
               departureTime: this.formatTime(currentTime),
-              arrivalTime: this.formatTime(currentTime + route.waitTime + route.travelTime + walkFromStopTime),
+              arrivalTime: this.formatTime(currentTime + walkToStopTime + route.waitTime + route.travelTime + walkFromStopTime),
               boardingTime: boardingTime,  // バス停での乗車時刻
               alightingTime: alightingTime, // バス停での降車時刻
+              walkToStopTime: walkToStopTime, // 出発地からバス停までの徒歩時間
               waitTime: route.waitTime,
               travelTime: route.travelTime,
               walkFromStopTime: walkFromStopTime, // バス停からスポットまでの徒歩時間
-              totalTime: route.waitTime + route.travelTime + walkFromStopTime,
+              totalTime: walkToStopTime + route.waitTime + route.travelTime + walkFromStopTime,
               mode: route.mode,
               routeName: route.routeName || null,
               routeNumber: route.routeNumber || null,
               scenicScore: route.scenicScore || 0
             });
 
-            currentTime += route.waitTime + route.travelTime + walkFromStopTime;
+            currentTime += walkToStopTime + route.waitTime + route.travelTime + walkFromStopTime;
           }
 
           // 訪問を追加
@@ -364,6 +370,16 @@ class OptimizerService {
 
       // 各停留所の組み合わせで最適なルートを探索（上位5つまで拡大）
       for (const fromStop of fromStops.slice(0, 5)) {
+        // 出発地からこのバス停までの徒歩時間を計算
+        const walkToStopDistance = this.calculateDistance(
+          from.lat,
+          from.lon,
+          fromStop.stop_lat,
+          fromStop.stop_lon
+        );
+        const walkToStopTime = Math.ceil((walkToStopDistance / 4) * 60);
+        const stopArrivalTime = currentTime + walkToStopTime; // バス停到着時刻
+
         for (const toStop of toStops.slice(0, 5)) {
           routesChecked++;
           const routes = await gtfsService.findRoutesBetweenStops(
@@ -373,11 +389,11 @@ class OptimizerService {
 
           if (routes.length > 0) {
             routesFound++;
-            // 現在時刻以降の次の便を探す（該当ルートのみ）
+            // バス停到着時刻以降の次の便を探す（該当ルートのみ）
             const routeIds = routes.map(r => r.route_id);
             const nextDepartures = await gtfsService.getNextDepartures(
               fromStop.stop_id,
-              this.formatTime(currentTime),
+              this.formatTime(stopArrivalTime), // バス停到着時刻を使用
               routeIds,  // ルートIDの配列を渡す
               5          // 取得する便の最大数
             );
@@ -387,7 +403,7 @@ class OptimizerService {
             }
 
             for (const departure of nextDepartures) {
-              const waitTime = this.calculateWaitTime(currentTime, departure.departure_time);
+              const waitTime = this.calculateWaitTime(stopArrivalTime, departure.departure_time); // バス停到着時刻を基準に待ち時間を計算
 
               // GTFSから実際の移動時間と到着時刻を取得
               const tripData = await gtfsService.getTravelTimeForTrip(
@@ -409,7 +425,7 @@ class OptimizerService {
                 console.log(`⚠️  No actual trip data, using estimate: ${travelTime}min`);
               }
 
-              const totalTime = waitTime + travelTime;
+              const totalTime = walkToStopTime + waitTime + travelTime; // 徒歩+待ち時間+バス移動
 
               if (totalTime < minTotalTime) {
                 minTotalTime = totalTime;
@@ -421,6 +437,7 @@ class OptimizerService {
                   fromStop,
                   toStop,
                   departure,
+                  walkToStopTime,  // 出発地→バス停の徒歩時間を追加
                   waitTime,
                   travelTime,
                   actualArrivalTime,  // 実際の到着時刻を追加
@@ -438,6 +455,18 @@ class OptimizerService {
       console.log(`🚌 Route search results: Checked ${routesChecked} combinations, Found ${routesFound} routes, Found ${departuresFound} departures`);
 
       if (bestRoute) {
+        // walkToStopTimeは既にbestRouteに含まれている
+        const walkToStopTime = bestRoute.walkToStopTime;
+
+        // 距離情報を追加
+        const walkToStopDistance = this.calculateDistance(
+          from.lat,
+          from.lon,
+          bestRoute.fromStop.stop_lat,
+          bestRoute.fromStop.stop_lon
+        );
+        bestRoute.walkToStopDistance = walkToStopDistance;
+
         // バス停から目的地までの徒歩時間を計算
         const walkFromStopDistance = this.calculateDistance(
           bestRoute.toStop.stop_lat,
@@ -449,8 +478,8 @@ class OptimizerService {
         bestRoute.walkFromStopTime = walkFromStopTime;
         bestRoute.walkFromStopDistance = walkFromStopDistance;
 
-        const transitTotalTime = bestRoute.waitTime + bestRoute.travelTime + walkFromStopTime;
-        console.log(`🚌 Best transit: ${bestRoute.fromStop.stop_name} → ${bestRoute.toStop.stop_name} (wait: ${bestRoute.waitTime}min, travel: ${bestRoute.travelTime}min, walk: ${walkFromStopTime}min, total: ${transitTotalTime}min)`);
+        const transitTotalTime = walkToStopTime + bestRoute.waitTime + bestRoute.travelTime + walkFromStopTime;
+        console.log(`🚌 Best transit: ${bestRoute.fromStop.stop_name} → ${bestRoute.toStop.stop_name} (walkTo: ${walkToStopTime}min, wait: ${bestRoute.waitTime}min, travel: ${bestRoute.travelTime}min, walkFrom: ${walkFromStopTime}min, total: ${transitTotalTime}min)`);
 
         // 徒歩ルートと比較
         const walkingRoute = this.createWalkingRoute(from, to, currentTime);
@@ -481,8 +510,10 @@ class OptimizerService {
       const transferRoute = await this.findTransferRoute(from, to, currentTime, fromStops, toStops, preferences);
 
       if (transferRoute) {
-        const transferTotalTime = transferRoute.waitTime + transferRoute.travelTime;
-        console.log(`🚌 Transfer route option: ${transferTotalTime}min (wait: ${transferRoute.waitTime}min, travel: ${transferRoute.travelTime}min)`);
+        const walkToStopTime = transferRoute.walkToStopTime || 0;
+        const walkFromStopTime = transferRoute.walkFromStopTime || 0;
+        const transferTotalTime = walkToStopTime + transferRoute.waitTime + transferRoute.travelTime + walkFromStopTime;
+        console.log(`🚌 Transfer route option: ${transferTotalTime}min (walkTo: ${walkToStopTime}min, wait: ${transferRoute.waitTime}min, travel: ${transferRoute.travelTime}min, walkFrom: ${walkFromStopTime}min)`);
 
         // 徒歩 vs バス乗り換えの比較
         // 徒歩が30分以内で、バス乗り換えが徒歩の1.5倍以上かかる場合は徒歩を選択
@@ -655,6 +686,15 @@ class OptimizerService {
         }
 
         if (bestSecondLeg) {
+          // 出発地から最初のバス停までの徒歩時間を計算
+          const walkToStopDistance = this.calculateDistance(
+            from.lat,
+            from.lon,
+            bestFirstLeg.fromStop.stop_lat,
+            bestFirstLeg.fromStop.stop_lon
+          );
+          const walkToStopTime = Math.ceil((walkToStopDistance / 4) * 60); // 時速4km想定
+
           // バス停から目的地までの徒歩時間を計算
           const walkFromStopDistance = this.calculateDistance(
             bestSecondLeg.toStop.stop_lat,
@@ -667,10 +707,11 @@ class OptimizerService {
           bestSecondLeg.walkFromStopDistance = walkFromStopDistance;
 
           const totalTransferTime =
+            walkToStopTime + // 出発地→最初のバス停
             bestFirstLeg.waitTime + bestFirstLeg.travelTime +
             5 + // 乗り換え時間
             bestSecondLeg.waitTime + bestSecondLeg.travelTime +
-            walkFromStopTime; // バス停から目的地までの徒歩時間を追加
+            walkFromStopTime; // 降車バス停→目的地
 
           if (totalTransferTime < minTotalTime) {
             minTotalTime = totalTransferTime;
@@ -682,6 +723,7 @@ class OptimizerService {
               transferHub: hub.name,
               waitTime: bestFirstLeg.waitTime + bestSecondLeg.waitTime + 5,
               travelTime: bestFirstLeg.travelTime + bestSecondLeg.travelTime,
+              walkToStopTime: walkToStopTime, // 乗車前の徒歩時間を追加
               walkFromStopTime: walkFromStopTime, // 降車後の徒歩時間を追加
               fromStop: bestFirstLeg.fromStop,
               toStop: bestSecondLeg.toStop,
