@@ -371,7 +371,7 @@ class OptimizerService {
       // 各停留所の組み合わせで最適なルートを探索（上位5つまで拡大）
       for (const fromStop of fromStops.slice(0, 5)) {
         // 出発地からこのバス停までの徒歩時間を計算
-        const walkToStopDistance = this.calculateDistance(
+        const walkToStopDistance = gtfsService.calculateDistance(
           from.lat,
           from.lon,
           fromStop.stop_lat,
@@ -459,7 +459,7 @@ class OptimizerService {
         const walkToStopTime = bestRoute.walkToStopTime;
 
         // 距離情報を追加
-        const walkToStopDistance = this.calculateDistance(
+        const walkToStopDistance = gtfsService.calculateDistance(
           from.lat,
           from.lon,
           bestRoute.fromStop.stop_lat,
@@ -468,7 +468,7 @@ class OptimizerService {
         bestRoute.walkToStopDistance = walkToStopDistance;
 
         // バス停から目的地までの徒歩時間を計算
-        const walkFromStopDistance = this.calculateDistance(
+        const walkFromStopDistance = gtfsService.calculateDistance(
           bestRoute.toStop.stop_lat,
           bestRoute.toStop.stop_lon,
           to.lat,
@@ -687,7 +687,7 @@ class OptimizerService {
 
         if (bestSecondLeg) {
           // 出発地から最初のバス停までの徒歩時間を計算
-          const walkToStopDistance = this.calculateDistance(
+          const walkToStopDistance = gtfsService.calculateDistance(
             from.lat,
             from.lon,
             bestFirstLeg.fromStop.stop_lat,
@@ -696,7 +696,7 @@ class OptimizerService {
           const walkToStopTime = Math.ceil((walkToStopDistance / 4) * 60); // 時速4km想定
 
           // バス停から目的地までの徒歩時間を計算
-          const walkFromStopDistance = this.calculateDistance(
+          const walkFromStopDistance = gtfsService.calculateDistance(
             bestSecondLeg.toStop.stop_lat,
             bestSecondLeg.toStop.stop_lon,
             to.lat,
