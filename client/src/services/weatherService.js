@@ -29,24 +29,38 @@ export const fetchWeatherForecast = async () => {
     const weathers = areas?.weathers || [];
     const pops = data[0]?.timeSeries?.[1]?.areas?.[0]?.pops || [];
 
+    // 気温データの取得
+    const tempData = data[0]?.timeSeries?.[2]?.areas?.[0];
+    const tempDefines = data[0]?.timeSeries?.[2]?.timeDefines || [];
+    const temps = tempData?.temps || [];
+
     // 今日と明日の天気情報
     const today = {
-      date: timeDefines[0] ? new Date(timeDefines[0]).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }) : '今日',
+      date: timeDefines[0] ? new Date(timeDefines[0]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '今日',
+      dateObj: timeDefines[0] ? new Date(timeDefines[0]) : new Date(),
       weather: weathers[0] || '不明',
       pop: pops[0] || '0',
+      tempMax: temps[0] || null,
+      tempMin: temps[1] || null,
     };
 
     const tomorrow = {
-      date: timeDefines[1] ? new Date(timeDefines[1]).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }) : '明日',
+      date: timeDefines[1] ? new Date(timeDefines[1]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '明日',
+      dateObj: timeDefines[1] ? new Date(timeDefines[1]) : new Date(Date.now() + 86400000),
       weather: weathers[1] || '不明',
       pop: pops[4] || pops[1] || '0', // 明日の降水確率
+      tempMax: temps[2] || null,
+      tempMin: temps[3] || null,
     };
 
-    return {
+    const result = {
       today,
       tomorrow,
       areaName: areas?.area?.name || '仙台市',
     };
+
+    console.log('🌤️ 天気情報を取得しました:', result);
+    return result;
   } catch (error) {
     console.error('Weather fetch error:', error);
     return null;

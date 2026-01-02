@@ -47,23 +47,41 @@ function WeatherWidget() {
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         {/* 今日 */}
-        <div className="bg-white rounded p-2">
-          <p className="text-gray-500 mb-1">{weather.today.date}</p>
-          <div className="flex items-center">
-            <span className="text-lg mr-1">{getWeatherIcon(weather.today.weather)}</span>
-            <span className="text-gray-700 text-xs">{weather.today.weather}</span>
+        <div className="bg-white rounded p-2 border border-gray-200">
+          <p className="text-gray-600 font-semibold mb-1">{weather.today.date}</p>
+          <div className="flex items-center mb-2">
+            <span className="text-2xl mr-2">{getWeatherIcon(weather.today.weather)}</span>
+            <div className="flex-1">
+              <span className="text-gray-800 text-xs font-medium block">{weather.today.weather}</span>
+              {weather.today.tempMax !== null && weather.today.tempMin !== null && (
+                <div className="flex items-center mt-1 space-x-1">
+                  <span className="text-red-500 font-semibold">{weather.today.tempMax}°</span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-blue-500 font-semibold">{weather.today.tempMin}°</span>
+                </div>
+              )}
+            </div>
           </div>
-          <p className="text-blue-600 mt-1">降水確率: {weather.today.pop}%</p>
+          <p className="text-blue-600 font-medium">💧 {weather.today.pop}%</p>
         </div>
 
         {/* 明日 */}
-        <div className="bg-white rounded p-2">
-          <p className="text-gray-500 mb-1">{weather.tomorrow.date}</p>
-          <div className="flex items-center">
-            <span className="text-lg mr-1">{getWeatherIcon(weather.tomorrow.weather)}</span>
-            <span className="text-gray-700 text-xs">{weather.tomorrow.weather}</span>
+        <div className="bg-white rounded p-2 border border-gray-200">
+          <p className="text-gray-600 font-semibold mb-1">{weather.tomorrow.date}</p>
+          <div className="flex items-center mb-2">
+            <span className="text-2xl mr-2">{getWeatherIcon(weather.tomorrow.weather)}</span>
+            <div className="flex-1">
+              <span className="text-gray-800 text-xs font-medium block">{weather.tomorrow.weather}</span>
+              {weather.tomorrow.tempMax !== null && weather.tomorrow.tempMin !== null && (
+                <div className="flex items-center mt-1 space-x-1">
+                  <span className="text-red-500 font-semibold">{weather.tomorrow.tempMax}°</span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-blue-500 font-semibold">{weather.tomorrow.tempMin}°</span>
+                </div>
+              )}
+            </div>
           </div>
-          <p className="text-blue-600 mt-1">降水確率: {weather.tomorrow.pop}%</p>
+          <p className="text-blue-600 font-medium">💧 {weather.tomorrow.pop}%</p>
         </div>
       </div>
 
