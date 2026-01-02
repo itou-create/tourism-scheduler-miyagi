@@ -53,13 +53,13 @@ function HowToUsePage() {
                 <p className="text-gray-700 mb-2">
                   訪問したい観光スポットのテーマを選択します。
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">🏛️ 歴史</span>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">🌳 自然</span>
-                  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">🍜 グルメ</span>
-                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">🏛️ 文化</span>
-                  <span className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm">🛍️ ショッピング</span>
-                  <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">🎨 アート</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-2 rounded-md text-sm">🗺️ 初めて訪れた人向けコース</span>
+                  <span className="bg-purple-100 text-purple-800 px-3 py-2 rounded-md text-sm">💎 2回目の人向けコース（穴場スポット）</span>
+                  <span className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-md text-sm">☕ 歴史とカフェを楽しむコース</span>
+                  <span className="bg-pink-100 text-pink-800 px-3 py-2 rounded-md text-sm">🌅 絶景とグルメを満喫コース</span>
+                  <span className="bg-green-100 text-green-800 px-3 py-2 rounded-md text-sm">🏃 アクティブに楽しむコース</span>
+                  <span className="bg-indigo-100 text-indigo-800 px-3 py-2 rounded-md text-sm">👨‍👩‍👧‍👦 ファミリー向けコース</span>
                 </div>
               </div>
             </div>
@@ -199,10 +199,10 @@ function HowToUsePage() {
             <div className="border-l-4 border-green-500 pl-4">
               <h4 className="font-semibold text-gray-800 mb-1">テーマ</h4>
               <p className="text-sm text-gray-700 mb-2">
-                選択したテーマに応じて、関連する観光スポットが自動的に選ばれます。
+                選択したテーマに応じて、関連する観光スポットが自動的に選ばれます。6つのコースから選択できます。
               </p>
               <p className="text-xs text-gray-600">
-                例: 「歴史」を選ぶと、仙台城跡や博物館などが候補になります
+                例: 「初めて訪れた人向けコース」では定番の人気スポット、「2回目の人向けコース」では穴場スポットが選ばれます
               </p>
             </div>
 
