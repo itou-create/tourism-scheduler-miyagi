@@ -68,23 +68,20 @@ function App() {
           <div className="mb-6 flex justify-center">
             <div className="relative">
               <svg
-                className="w-20 h-20 animate-bounce"
-                viewBox="0 0 24 24"
+                className="w-24 h-24 animate-bounce"
+                viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M4 16C4 16.5304 4.21071 17.0391 4.58579 17.4142C4.96086 17.7893 5.46957 18 6 18H7C7 18.7956 7.31607 19.5587 7.87868 20.1213C8.44129 20.6839 9.20435 21 10 21C10.7956 21 11.5587 20.6839 12.1213 20.1213C12.6839 19.5587 13 18.7956 13 18H17C17 18.7956 17.3161 19.5587 17.8787 20.1213C18.4413 20.6839 19.2044 21 20 21C20.7956 21 21.5587 20.6839 22.1213 20.1213C22.6839 19.5587 23 18.7956 23 18H24C24.5304 18 25.0391 17.7893 25.4142 17.4142C25.7893 17.0391 26 16.5304 26 16V6C26 5.46957 25.7893 4.96086 25.4142 4.58579C25.0391 4.21071 24.5304 4 24 4H6C5.46957 4 4.96086 4.21071 4.58579 4.58579C4.21071 4.96086 4 5.46957 4 6V16Z"
-                  stroke="#667eea"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="#667eea"
-                  opacity="0.8"
-                />
-                <circle cx="10" cy="18" r="1.5" fill="white"/>
-                <circle cx="20" cy="18" r="1.5" fill="white"/>
-                <rect x="7" y="7" width="16" height="6" rx="1" fill="white" opacity="0.8"/>
+                {/* バスのアイコン（トップページと同じデザイン） */}
+                <rect x="20" y="35" width="60" height="40" rx="5" fill="#667eea" opacity="0.9"/>
+                <rect x="25" y="40" width="20" height="15" fill="#3B82F6"/>
+                <rect x="55" y="40" width="20" height="15" fill="#3B82F6"/>
+                <circle cx="35" cy="75" r="5" fill="#1F2937"/>
+                <circle cx="65" cy="75" r="5" fill="#1F2937"/>
+                <path d="M30,35 L70,35 L75,30 L25,30 Z" fill="#667eea" opacity="0.9"/>
+                {/* 松島の波 */}
+                <path d="M5,85 Q15,80 25,85 T45,85 T65,85 T85,85 T95,85" stroke="#667eea" strokeWidth="2" fill="none" opacity="0.7"/>
               </svg>
               {/* 道路のライン */}
               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
