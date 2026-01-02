@@ -10,13 +10,32 @@ function HowToUsePage() {
           <p className="text-gray-700 mb-4">
             実際の操作画面を録画したデモ動画です。基本的な使い方を確認できます。
           </p>
-          <div className="bg-gray-100 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-600">
-              デモ動画: <code className="bg-gray-200 px-2 py-1 rounded">recorded-demo.mp4</code>
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              ※ 動画ファイルはプロジェクトルートに保存されています
-            </p>
+          <div className="bg-gray-100 rounded-lg p-4">
+            <div className="aspect-video w-full max-w-3xl mx-auto">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/hQBhqN5jGk0"
+                title="観光周遊スケジュール自動生成アプリ デモ動画"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="rounded-lg"
+              ></iframe>
+            </div>
+            <div className="text-center mt-3">
+              <a
+                href="https://youtu.be/hQBhqN5jGk0?si=EJzXv8orW9ObcSHU"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+              >
+                YouTubeで視聴
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
           </div>
         </section>
 
