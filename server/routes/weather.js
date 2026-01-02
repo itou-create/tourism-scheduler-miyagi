@@ -47,9 +47,22 @@ router.get('/forecast', async (req, res) => {
     const tempData = data[0]?.timeSeries?.[2]?.areas?.[0];
     const temps = tempData?.temps || [];
 
+    // 日付フォーマット関数（タイムゾーンを明示的に指定）
+    const formatDate = (isoString) => {
+      if (!isoString) return null;
+      const date = new Date(isoString);
+      // 日本時間で確実に処理するため、UTC+9でフォーマット
+      return date.toLocaleDateString('ja-JP', {
+        month: 'numeric',
+        day: 'numeric',
+        weekday: 'short',
+        timeZone: 'Asia/Tokyo'
+      });
+    };
+
     // 今日と明日の天気情報
     const today = {
-      date: timeDefines[0] ? new Date(timeDefines[0]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '今日',
+      date: timeDefines[0] ? formatDate(timeDefines[0]) : '今日',
       dateObj: timeDefines[0] || new Date().toISOString(),
       weather: weathers[0] || '不明',
       pop: pops[0] || '0',
@@ -58,7 +71,7 @@ router.get('/forecast', async (req, res) => {
     };
 
     const tomorrow = {
-      date: timeDefines[1] ? new Date(timeDefines[1]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '明日',
+      date: timeDefines[1] ? formatDate(timeDefines[1]) : '明日',
       dateObj: timeDefines[1] || new Date(Date.now() + 86400000).toISOString(),
       weather: weathers[1] || '不明',
       pop: pops[4] || pops[1] || '0',
