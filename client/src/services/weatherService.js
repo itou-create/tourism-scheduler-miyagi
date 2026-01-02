@@ -1,66 +1,22 @@
-// 気象庁オープンデータから天気予報を取得
-const SENDAI_AREA_CODE = '040010'; // 仙台市の地域コード
-
+// バックエンドAPI経由で天気予報を取得
 export const fetchWeatherForecast = async () => {
   try {
-    // 気象庁の天気予報API
-    const response = await fetch(
-      `https://www.jma.go.jp/bosai/forecast/data/forecast/${SENDAI_AREA_CODE}.json`
-    );
+    // バックエンドの天気APIを呼び出す
+    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE_URL}/weather/forecast`);
 
     if (!response.ok) {
       throw new Error('天気予報の取得に失敗しました');
     }
 
-    const data = await response.json();
+    const json = await response.json();
 
-    // データの整形
-    if (!data || data.length === 0) {
-      return null;
+    if (!json.success || !json.data) {
+      throw new Error(json.error || '天気予報データが不正です');
     }
 
-    const timeSeriesData = data[0]?.timeSeries?.[0];
-    if (!timeSeriesData) {
-      return null;
-    }
-
-    const areas = timeSeriesData.areas?.[0];
-    const timeDefines = timeSeriesData.timeDefines || [];
-    const weathers = areas?.weathers || [];
-    const pops = data[0]?.timeSeries?.[1]?.areas?.[0]?.pops || [];
-
-    // 気温データの取得
-    const tempData = data[0]?.timeSeries?.[2]?.areas?.[0];
-    const tempDefines = data[0]?.timeSeries?.[2]?.timeDefines || [];
-    const temps = tempData?.temps || [];
-
-    // 今日と明日の天気情報
-    const today = {
-      date: timeDefines[0] ? new Date(timeDefines[0]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '今日',
-      dateObj: timeDefines[0] ? new Date(timeDefines[0]) : new Date(),
-      weather: weathers[0] || '不明',
-      pop: pops[0] || '0',
-      tempMax: temps[0] || null,
-      tempMin: temps[1] || null,
-    };
-
-    const tomorrow = {
-      date: timeDefines[1] ? new Date(timeDefines[1]).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' }) : '明日',
-      dateObj: timeDefines[1] ? new Date(timeDefines[1]) : new Date(Date.now() + 86400000),
-      weather: weathers[1] || '不明',
-      pop: pops[4] || pops[1] || '0', // 明日の降水確率
-      tempMax: temps[2] || null,
-      tempMin: temps[3] || null,
-    };
-
-    const result = {
-      today,
-      tomorrow,
-      areaName: areas?.area?.name || '仙台市',
-    };
-
-    console.log('🌤️ 天気情報を取得しました:', result);
-    return result;
+    console.log('🌤️ 天気情報を取得しました:', json.data);
+    return json.data;
   } catch (error) {
     console.error('Weather fetch error:', error);
     return null;

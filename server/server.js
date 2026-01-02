@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import schedulerRoutes from './routes/scheduler.js';
 import gtfsRoutes from './routes/gtfs.js';
 import spotsRoutes from './routes/spots.js';
+import weatherRoutes from './routes/weather.js';
 import sendaiOpenDataService from './services/sendaiOpenDataService.js';
 
 dotenv.config({ path: '../.env' });
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/gtfs', gtfsRoutes);
 app.use('/api/spots', spotsRoutes);
+app.use('/api/weather', weatherRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
