@@ -4,6 +4,7 @@ import Header from './components/Header';
 import SearchPage from './pages/SearchPage';
 import ResultPage from './pages/ResultPage';
 import AboutPage from './pages/AboutPage';
+import HowToUsePage from './pages/HowToUsePage';
 import { healthCheck } from './services/api';
 
 function App() {
@@ -134,6 +135,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SearchPage />} />
           <Route path="/result" element={<ResultPage />} />
+          <Route path="/how-to-use" element={<HowToUsePage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </div>

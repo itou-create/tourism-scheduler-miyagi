@@ -16,11 +16,11 @@ function Header() {
             </Link>
           </div>
           <nav className="ml-4">
-            <ul className="flex gap-2 md:gap-4">
+            <ul className="flex gap-2 md:gap-3">
               <li>
                 <Link
                   to="/"
-                  className={`px-3 py-2 rounded-md text-sm md:text-base font-medium transition-colors ${
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-base font-medium transition-colors ${
                     location.pathname === '/'
                       ? 'bg-primary-700 text-white'
                       : 'text-primary-100 hover:bg-primary-700 hover:text-white'
@@ -31,8 +31,20 @@ function Header() {
               </li>
               <li>
                 <Link
+                  to="/how-to-use"
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-base font-medium transition-colors ${
+                    location.pathname === '/how-to-use'
+                      ? 'bg-primary-700 text-white'
+                      : 'text-primary-100 hover:bg-primary-700 hover:text-white'
+                  }`}
+                >
+                  使い方
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/about"
-                  className={`px-3 py-2 rounded-md text-sm md:text-base font-medium transition-colors ${
+                  className={`px-2 md:px-3 py-2 rounded-md text-xs md:text-base font-medium transition-colors ${
                     location.pathname === '/about'
                       ? 'bg-primary-700 text-white'
                       : 'text-primary-100 hover:bg-primary-700 hover:text-white'
